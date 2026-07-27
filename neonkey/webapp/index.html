@@ -155,20 +155,39 @@
             </div>
             <div class="modal-body">
                 <div id="orderStep1">
-                    <p style="color: #8899bb; font-size: 14px; margin-bottom: 12px;">Минимальная сумма: <span id="orderMinValue">0</span> ₽</p>
-                    <div style="margin-bottom: 12px;">
-                        <label class="field-label" style="display: block; margin-bottom: 4px;">Сумма (₽ / Stars):</label>
-                        <input type="number" id="orderAmount" placeholder="Введите сумму" class="field-input" style="margin: 0;">
+                    <div class="order-rate-badge" id="orderRateBadge">Курс: —</div>
+
+                    <div class="order-field">
+                        <label class="field-label" id="orderAccountLabel">Данные аккаунта</label>
+                        <input type="text" id="orderAccountData" placeholder="" class="field-input" autocomplete="off">
+                        <div class="field-error" id="orderAccountError"></div>
                     </div>
-                    <div style="margin-bottom: 12px; margin-top: 12px;">
-                        <label class="field-label" style="display: block; margin-bottom: 4px;">Данные аккаунта (логин / ссылка):</label>
-                        <input type="text" id="orderAccountData" placeholder="Введите логин Steam или ссылку на канал" class="field-input" style="margin: 0;">
+
+                    <div class="order-field">
+                        <label class="field-label" id="orderAmountLabel">Сумма</label>
+                        <div class="order-input-wrap">
+                            <input type="number" id="orderAmount" placeholder="Введите сумму" class="field-input" inputmode="decimal">
+                            <span class="order-input-suffix" id="orderAmountSuffix">₽</span>
+                        </div>
+                        <div class="field-hint" id="orderMinHint">Минимальная сумма: <span id="orderMinValue">0</span></div>
                     </div>
-                    <div id="orderResult" class="result-box" style="display: none;">
-                        <p><strong>Стоимость:</strong> <span id="orderPriceRub" style="color: #ffd700;">0.00</span> ₽</p>
-                        <p><strong>Ваш баланс:</strong> <span id="orderUserBalance" style="color: #00d4ff;">0.00</span> ₽</p>
-                        <button id="orderConfirmBtn" class="btn-neon btn-full">Купить</button>
+
+                    <div id="orderResult" class="order-result">
+                        <div class="order-result-row">
+                            <span>Вы получите</span>
+                            <strong id="orderReceiveValue">—</strong>
+                        </div>
+                        <div class="order-result-row highlight">
+                            <span>К оплате с баланса</span>
+                            <strong id="orderPriceRub">0.00 ₽</strong>
+                        </div>
+                        <div class="order-result-row muted">
+                            <span>Баланс после покупки</span>
+                            <strong id="orderBalanceAfter">0.00 ₽</strong>
+                        </div>
                     </div>
+
+                    <button id="orderConfirmBtn" class="btn-neon btn-full" disabled>Купить</button>
                 </div>
                 <div id="orderStep2" style="display: none;">
                     <p style="color: #c0d0e0; margin-bottom: 12px;">✅ Заказ успешно создан! Товар будет доставлен в ближайшее время.</p>

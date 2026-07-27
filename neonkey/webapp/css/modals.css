@@ -84,6 +84,16 @@
     color: #fff;
     font-size: 16px;
     margin: 10px 0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field-input:focus {
+    outline: none;
+    border-color: #00d4ff;
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+.field-input.invalid {
+    border-color: #ff5566;
+    box-shadow: 0 0 0 3px rgba(255, 85, 102, 0.12);
 }
 .deposit-crypto-row {
     display: flex;
@@ -115,6 +125,128 @@
 .btn-full.btn-success {
     background: #00ff88;
     color: #0a0e1a;
+}
+
+/* Базовая стилизация всех кнопок с классом .btn-neon (раньше её не было
+   глобально — из-за этого кнопка "Купить"/"Пополнить" в модалках была
+   фактически неоформленным браузерным <button>). */
+.btn-neon {
+    display: block;
+    width: 100%;
+    padding: 13px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffd700, #ff9d00);
+    color: #0a0e1a;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25);
+}
+.btn-neon:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.35);
+}
+.btn-neon:active:not(:disabled) {
+    transform: translateY(0);
+}
+.btn-neon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* ===== ФОРМА ЗАКАЗА (Steam / Stars) — живой предпросчёт ===== */
+.order-rate-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    color: #00d4ff;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.order-field {
+    display: flex;
+    flex-direction: column;
+}
+.order-input-wrap {
+    position: relative;
+}
+.order-input-wrap .field-input {
+    padding-right: 52px;
+}
+.order-input-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #8899bb;
+    font-size: 14px;
+    font-weight: 600;
+    pointer-events: none;
+}
+.field-error {
+    min-height: 16px;
+    color: #ff5566;
+    font-size: 12px;
+    margin-top: -4px;
+    margin-bottom: 2px;
+}
+.field-hint {
+    color: #667799;
+    font-size: 12px;
+    margin-top: -4px;
+}
+.field-hint.error {
+    color: #ff5566;
+}
+.order-result {
+    margin-top: 4px;
+    padding: 14px 16px;
+    background: #0d1422;
+    border: 1px solid #2a3a5a;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+.order-result.active {
+    opacity: 1;
+}
+.order-result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    color: #c0d0e0;
+    font-size: 14px;
+}
+.order-result-row + .order-result-row {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.order-result-row.highlight strong {
+    color: #ffd700;
+    font-size: 17px;
+}
+.order-result-row.muted {
+    font-size: 12.5px;
+    color: #667799;
+}
+.order-result-row.muted strong {
+    color: #8899bb;
+    font-weight: 600;
+}
+.order-result-row.muted strong.insufficient {
+    color: #ff5566;
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО ПОПОЛНЕНИЯ ===== */

@@ -49,15 +49,17 @@ export function initAdminSettingsForm() {
         };
         const statusEl = document.getElementById('adminStatus');
         statusEl.textContent = '⏳ Сохранение...';
-        const success = await saveSettings(newSettings);
+        const { success, error } = await saveSettings(newSettings);
         if (success) {
             state.settings = newSettings;
             updatePricesDisplay(state.currentProduct);
             loadAdminSettings();
             statusEl.textContent = '✅ Настройки сохранены!';
+            statusEl.style.color = '';
             setTimeout(() => { statusEl.textContent = ''; }, 3000);
         } else {
-            statusEl.textContent = '❌ Ошибка сохранения. Проверьте консоль.';
+            statusEl.textContent = `❌ Ошибка сохранения: ${error || 'см. консоль'}`;
+            statusEl.style.color = '#ff5566';
         }
     });
 }

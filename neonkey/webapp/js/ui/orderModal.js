@@ -10,6 +10,41 @@ import { renderHistory } from './history.js';
 import { renderAdminOrders } from './admin.js';
 import { updateBalanceDisplay } from './profileView.js';
 
+// Настройки вида полей под каждый товар — чтобы подписи и плейсхолдеры
+// соответствовали тому, что реально нужно ввести (это то, что раньше
+// было одинаковым для Steam и Stars и вводило в заблуждение).
+const PRODUCT_CONFIG = {
+    steam: {
+        title: 'Пополнение Steam',
+        accountLabel: 'Логин Steam или ссылка на профиль',
+        accountPlaceholder: 'например: my_login или steamcommunity.com/id/...',
+        accountPrefill: '',
+        amountLabel: 'Сумма пополнения',
+        amountSuffix: '₽',
+        minUnit: '₽',
+        receiveUnit: (amount) => `${formatNumber(amount)} ₽ на Steam`,
+        rate: (settings) => `Курс: 1 ₽ пополнения = ${settings.steam_price.toFixed(2)} ₽`,
+    },
+    stars: {
+        title: 'Покупка Stars',
+        accountLabel: 'Username получателя',
+        accountPlaceholder: 'username',
+        accountPrefill: '@',
+        amountLabel: 'Количество Stars',
+        amountSuffix: '⭐',
+        minUnit: '⭐',
+        receiveUnit: (amount) => `${formatNumber(amount)} ⭐`,
+        rate: (settings) => `Курс: 1 ⭐ = ${settings.stars_price.toFixed(2)} ₽`,
+    },
+};
+
+function formatNumber(n) {
+    return Number(n).toLocaleString('ru-RU');
+}
+function formatRub(n) {
+    return `${Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`;
+}
+
 export function initShopButtons() {
     document.querySelectorAll('.buy-btn').forEach((btn) => {
         btn.addEventListener('click', function (e) {
@@ -37,31 +72,61 @@ export function initOrderModal() {
     orderModalOverlay.addEventListener('click', closeOrderModal);
 
     document.getElementById('orderAmount').addEventListener('input', calculateOrder);
+    document.getElementById('orderAccountData').addEventListener('input', calculateOrder);
     document.getElementById('orderConfirmBtn').addEventListener('click', handleOrderConfirm);
     document.getElementById('orderCloseBtn').addEventListener('click', closeOrderModal);
 }
 
 async function openOrderModal(product) {
     state.currentProduct = product;
+    const cfg = PRODUCT_CONFIG[product];
+
+    // Сброс формы к чистому состоянию до подгрузки актуальных настроек,
+    // чтобы не мелькали старые данные другого товара.
+    document.getElementById('orderModalTitle').textContent = cfg.title;
+    document.getElementById('orderAccountLabel').textContent = cfg.accountLabel;
+    const accountInput = document.getElementById('orderAccountData');
+    accountInput.placeholder = cfg.accountPlaceholder;
+    accountInput.value = cfg.accountPrefill;
+    accountInput.classList.remove('invalid');
+    document.getElementById('orderAccountError').textContent = '';
+
+    document.getElementById('orderAmountLabel').textContent = cfg.amountLabel;
+    document.getElementById('orderAmountSuffix').textContent = cfg.amountSuffix;
+    const amountInput = document.getElementById('orderAmount');
+    amountInput.value = '';
+    amountInput.classList.remove('invalid');
+
+    document.getElementById('orderStep1').style.display = 'block';
+    document.getElementById('orderStep2').style.display = 'none';
+    document.getElementById('orderResult').classList.remove('active');
+    document.getElementById('orderConfirmBtn').disabled = true;
+
+    document.getElementById('orderModal').classList.remove('hidden');
+    document.getElementById('orderModalOverlay').classList.remove('hidden');
+
+    // Курс/минималка сразу из того, что уже загружено в state (без
+    // "прыжка" интерфейса), а следом — свежие данные из Supabase, на
+    // случай если админ поменял их только что.
+    applySettingsToUI(product, withDefaults(state.settings));
     const freshSettings = await loadSettings();
     if (freshSettings) {
         state.settings = freshSettings;
         updatePricesDisplay(product);
+        applySettingsToUI(product, withDefaults(freshSettings));
+        calculateOrder();
     }
-    const settings = withDefaults(state.settings);
 
-    document.getElementById('orderModalTitle').textContent = product === 'steam' ? 'Пополнение Steam' : 'Покупка Stars';
-    document.getElementById('orderStep1').style.display = 'block';
-    document.getElementById('orderStep2').style.display = 'none';
-    document.getElementById('orderResult').style.display = 'none';
-    document.getElementById('orderAmount').value = '';
-    document.getElementById('orderAccountData').value = '';
+    // Курсор сразу после префикса "@" у Stars.
+    accountInput.focus();
+    accountInput.setSelectionRange(accountInput.value.length, accountInput.value.length);
+}
 
+function applySettingsToUI(product, settings) {
+    const cfg = PRODUCT_CONFIG[product];
     const min = product === 'steam' ? settings.steam_min : settings.stars_min;
-    document.getElementById('orderMinValue').textContent = min;
-
-    document.getElementById('orderModal').classList.remove('hidden');
-    document.getElementById('orderModalOverlay').classList.remove('hidden');
+    document.getElementById('orderMinValue').textContent = `${formatNumber(min)} ${cfg.minUnit}`;
+    document.getElementById('orderRateBadge').textContent = cfg.rate(settings);
 }
 
 function closeOrderModal() {
@@ -69,29 +134,67 @@ function closeOrderModal() {
     document.getElementById('orderModalOverlay').classList.add('hidden');
 }
 
+// Живой пересчёт: срабатывает на каждое нажатие клавиши в сумме или
+// в поле аккаунта — пользователь сразу видит, сколько спишется и
+// хватает ли баланса, без отдельной кнопки "рассчитать".
 function calculateOrder() {
-    const amountInput = document.getElementById('orderAmount');
-    const amount = parseFloat(amountInput.value);
-    const resultDiv = document.getElementById('orderResult');
-    if (!amount || amount <= 0) {
-        resultDiv.style.display = 'none';
-        return;
-    }
-
-    const settings = withDefaults(state.settings);
     const product = state.currentProduct;
+    const cfg = PRODUCT_CONFIG[product];
+    const settings = withDefaults(state.settings);
     const min = product === 'steam' ? settings.steam_min : settings.stars_min;
-    if (amount < min) {
-        resultDiv.style.display = 'none';
+
+    const amountInput = document.getElementById('orderAmount');
+    const accountInput = document.getElementById('orderAccountData');
+    const amountError = document.getElementById('orderMinHint');
+    const accountError = document.getElementById('orderAccountError');
+    const resultDiv = document.getElementById('orderResult');
+    const confirmBtn = document.getElementById('orderConfirmBtn');
+
+    const amountRaw = amountInput.value;
+    const amount = parseFloat(amountRaw);
+    const hasAmount = amountRaw !== '' && !isNaN(amount) && amount > 0;
+    const amountValid = hasAmount && amount >= min;
+
+    const accountValue = accountInput.value.trim();
+    const accountValid = product === 'stars'
+        ? accountValue.length > 1 // не только "@"
+        : accountValue.length > 0;
+
+    // Подсветка невалидных полей
+    amountInput.classList.toggle('invalid', hasAmount && !amountValid);
+    amountError.classList.toggle('error', hasAmount && !amountValid);
+    amountError.textContent = (hasAmount && !amountValid)
+        ? `Минимум ${formatNumber(min)} ${cfg.minUnit} — увеличьте сумму`
+        : `Минимальная сумма: ${formatNumber(min)} ${cfg.minUnit}`;
+
+    accountInput.classList.toggle('invalid', accountValue.length > 0 && !accountValid);
+    accountError.textContent = '';
+
+    if (!amountValid) {
+        resultDiv.classList.remove('active');
+        confirmBtn.disabled = true;
+        state.calculatedPrice = 0;
         return;
     }
 
     const priceRub = product === 'steam' ? amount * settings.steam_price : amount * settings.stars_price;
     state.calculatedPrice = priceRub;
 
-    document.getElementById('orderPriceRub').textContent = priceRub.toFixed(2);
-    document.getElementById('orderUserBalance').textContent = state.appData.balance.toFixed(2);
-    resultDiv.style.display = 'block';
+    const balanceAfter = state.appData.balance - priceRub;
+    const insufficient = balanceAfter < 0;
+
+    document.getElementById('orderReceiveValue').textContent = cfg.receiveUnit(amount);
+    document.getElementById('orderPriceRub').textContent = formatRub(priceRub);
+    const balanceAfterEl = document.getElementById('orderBalanceAfter');
+    balanceAfterEl.textContent = formatRub(balanceAfter);
+    balanceAfterEl.classList.toggle('insufficient', insufficient);
+    resultDiv.classList.add('active');
+
+    if (insufficient) {
+        accountError.textContent = `Не хватает ${formatRub(-balanceAfter)} — пополните баланс`;
+    }
+
+    confirmBtn.disabled = !(amountValid && accountValid && !insufficient);
 }
 
 async function handleOrderConfirm() {
@@ -105,7 +208,7 @@ async function handleOrderConfirm() {
         return;
     }
     const accountData = document.getElementById('orderAccountData').value.trim();
-    if (!accountData) {
+    if (!accountData || (state.currentProduct === 'stars' && accountData === '@')) {
         tg.showAlert('Пожалуйста, введите данные аккаунта.');
         return;
     }
