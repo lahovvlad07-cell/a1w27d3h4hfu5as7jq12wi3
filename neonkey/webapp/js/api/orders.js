@@ -1,8 +1,20 @@
 // ===== РАБОТА С ЗАКАЗАМИ =====
 import { supabaseClient } from '../lib/supabaseClient.js';
 
+/**
+ * Возвращает { order, error } вместо простого объекта/null — раньше
+ * при неудаче было видно только общее "Не удалось создать заказ",
+ * а настоящую причину приходилось искать в консоли браузера (F12).
+ *
+ * САМАЯ ЧАСТАЯ ПРИЧИНА: RLS (Row Level Security) включён в Supabase на
+ * таблице `orders`, но нет политики INSERT для роли anon — то есть
+ * анонимному ключу в принципе запрещено писать в эту таблицу. Заказ
+ * при этом не создаётся вообще, деньги с локального баланса возвращаются
+ * обратно (см. orderModal.js), это не потеря средств — просто нужно
+ * один раз настроить Policies (см. README, раздел "Важно — безопасность").
+ */
 export async function createOrder(userId, product, amount, priceRub, accountData) {
-    if (!supabaseClient) return null;
+    if (!supabaseClient) return { order: null, error: 'Supabase клиент не инициализирован' };
     try {
         const { data, error } = await supabaseClient
             .from('orders')
@@ -17,14 +29,17 @@ export async function createOrder(userId, product, amount, priceRub, accountData
             .select()
             .single();
         if (error) {
-            console.error('Ошибка создания заказа:', error);
-            return null;
+            console.error('Ошибка создания заказа:', error.message, error);
+            const hint = (error.code === '42501' || /row-level security|permission|policy|RLS/i.test(error.message || ''))
+                ? ' — в Supabase не разрешена запись (INSERT) в таблицу orders для анонимного ключа. Проверь Policies для таблицы orders.'
+                : '';
+            return { order: null, error: (error.message || 'неизвестная ошибка') + hint };
         }
         console.log('Заказ создан:', data);
-        return data;
+        return { order: data, error: null };
     } catch (e) {
         console.error('Ошибка создания заказа:', e);
-        return null;
+        return { order: null, error: e.message || String(e) };
     }
 }
 

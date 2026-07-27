@@ -297,7 +297,7 @@ async function proceedWithOrder() {
     saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     updateBalanceDisplay();
 
-    const order = await createOrder(state.user.id, state.currentProduct, amount, price, accountData);
+    const { order, error } = await createOrder(state.user.id, state.currentProduct, amount, price, accountData);
 
     yesBtn.disabled = false;
 
@@ -305,7 +305,7 @@ async function proceedWithOrder() {
         state.appData.balance += price;
         saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
         updateBalanceDisplay();
-        showToast('Не удалось создать заказ. Попробуйте позже.', 'error');
+        showToast(`Не удалось создать заказ: ${error || 'см. консоль'}`, 'error', 4500);
         return;
     }
 
