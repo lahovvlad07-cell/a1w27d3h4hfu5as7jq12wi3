@@ -3,6 +3,7 @@ import { state } from '../state.js';
 import { tg } from '../lib/telegram.js';
 import { loadSettings } from '../api/settings.js';
 import { updatePricesDisplay } from './shop.js';
+import { refreshHistoryFromServer } from './history.js';
 import { CHANNEL_URL } from '../config.js';
 
 export function initTabs() {
@@ -31,6 +32,13 @@ export function initTabs() {
                     updatePricesDisplay(state.currentProduct);
                 }
             });
+        }
+
+        // При возврате в профиль подтягиваем актуальные статусы заказов —
+        // если админ обработал заказ, пока вкладка была закрыта, статус
+        // "В обработке" должен смениться на "Выполнен"/"Отклонён".
+        if (tabId === 'profile' && state.appData.consent) {
+            refreshHistoryFromServer();
         }
     }
 

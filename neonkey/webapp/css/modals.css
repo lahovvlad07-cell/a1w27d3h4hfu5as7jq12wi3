@@ -375,5 +375,7 @@
 #welcomeModalOverlay { z-index: 10001 !important; }
 #orderModal { z-index: 10003 !important; }
 #orderModalOverlay { z-index: 10002 !important; }
+#orderConfirmModal { z-index: 10006 !important; }
+#orderConfirmModalOverlay { z-index: 10005 !important; }
 #depositModal { z-index: 10004 !important; }
 #depositModalOverlay { z-index: 10003 !important; }

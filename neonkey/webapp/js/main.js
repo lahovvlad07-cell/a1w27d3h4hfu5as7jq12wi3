@@ -14,10 +14,11 @@ import { initAvatarModal } from './ui/avatarModal.js';
 import { initDepositButton, initDepositModal } from './ui/depositModal.js';
 import { initShopButtons, initOrderModal } from './ui/orderModal.js';
 import { updatePricesDisplay } from './ui/shop.js';
-import { renderHistory } from './ui/history.js';
+import { renderHistory, refreshHistoryFromServer } from './ui/history.js';
 import { renderProfile, updateBalanceDisplay } from './ui/profileView.js';
 import { initTabs } from './ui/tabs.js';
 import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrders } from './ui/admin.js';
+import { hideLoadingOverlay } from './ui/loadingOverlay.js';
 
 (async function initApp() {
     console.log('🚀 Запуск приложения...');
@@ -30,6 +31,7 @@ import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrde
     const user = requireAuth();
     if (!user) {
         console.warn('Авторизация не пройдена — приложение открыто не из Telegram.');
+        hideLoadingOverlay();
         return;
     }
     state.user = user;
@@ -74,6 +76,10 @@ import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrde
     }
 
     // ===== СОГЛАСИЕ С ПОЛИТИКАМИ =====
+    // На этом моменте мы уже точно знаем, нужно ли показывать согласие —
+    // поэтому сначала прячем экран загрузки, и сразу следом показываем
+    // ровно то, что нужно (без промежуточного мигания).
+    hideLoadingOverlay();
     initConsentFlow({
         onAccepted: activateFullShopExperience,
         onNeedsAvatar: () => showWelcomeModal(() => openAvatarModal()),
@@ -82,9 +88,12 @@ import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrde
     // ===== ЗАПОЛНЕНИЕ ПРОФИЛЯ И ИСТОРИИ =====
     renderProfile();
     renderHistory();
+    if (state.appData.consent) {
+        refreshHistoryFromServer(); // подтягивает актуальные статусы заказов
+    }
 
     // ===== ФИНАЛ =====
     tg.ready();
     tg.expand();
-    console.log(`✅ NeonKey v1.0.0 загружен`);
+    console.log(`✅ NeonKey v1.2.0 загружен`);
 })();

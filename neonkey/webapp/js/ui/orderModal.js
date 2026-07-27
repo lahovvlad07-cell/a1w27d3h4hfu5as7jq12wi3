@@ -9,6 +9,7 @@ import { updatePricesDisplay } from './shop.js';
 import { renderHistory } from './history.js';
 import { renderAdminOrders } from './admin.js';
 import { updateBalanceDisplay } from './profileView.js';
+import { showToast } from './toast.js';
 
 // Настройки вида полей под каждый товар. Плейсхолдер/подпись у Steam
 // специально короткие (как в проф. магазинах — просто "Логин Steam"),
@@ -51,6 +52,19 @@ function formatRub(n) {
     return `${Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`;
 }
 
+// У Stars поле username всегда должно начинаться с "@" — пользователь
+// может стирать/менять всё, что после него, но сам символ "@" убрать
+// нельзя (если он это сделает — тут же подставляем обратно).
+function enforceStarsPrefix(input) {
+    if (state.currentProduct !== 'stars') return;
+    if (!input.value.startsWith('@')) {
+        const cursorPos = input.selectionStart ?? input.value.length;
+        input.value = '@' + input.value.replace(/^@+/, '');
+        const newPos = Math.min(input.value.length, Math.max(1, cursorPos + 1));
+        input.setSelectionRange(newPos, newPos);
+    }
+}
+
 export function initShopButtons() {
     document.querySelectorAll('.buy-btn').forEach((btn) => {
         btn.addEventListener('click', function (e) {
@@ -78,9 +92,16 @@ export function initOrderModal() {
     orderModalOverlay.addEventListener('click', closeOrderModal);
 
     document.getElementById('orderAmount').addEventListener('input', calculateOrder);
-    document.getElementById('orderAccountData').addEventListener('input', calculateOrder);
+    document.getElementById('orderAccountData').addEventListener('input', function () {
+        enforceStarsPrefix(this);
+        calculateOrder();
+    });
     document.getElementById('orderConfirmBtn').addEventListener('click', handleOrderConfirm);
-    document.getElementById('orderCloseBtn').addEventListener('click', closeOrderModal);
+
+    // ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ЗАКАЗА =====
+    document.getElementById('orderConfirmYes').addEventListener('click', proceedWithOrder);
+    document.getElementById('orderConfirmNo').addEventListener('click', closeConfirmModal);
+    document.getElementById('orderConfirmModalOverlay').addEventListener('click', closeConfirmModal);
 }
 
 async function openOrderModal(product) {
@@ -114,7 +135,6 @@ async function openOrderModal(product) {
     balanceAfterEl.classList.remove('insufficient');
 
     document.getElementById('orderStep1').style.display = 'block';
-    document.getElementById('orderStep2').style.display = 'none';
     document.getElementById('orderResult').classList.remove('active');
     document.getElementById('orderConfirmBtn').disabled = true;
 
@@ -243,38 +263,57 @@ async function handleOrderConfirm() {
         return;
     }
 
-    const confirmed = await new Promise((resolve) => {
-        tg.showPopup(
-            {
-                title: 'Подтверждение заказа',
-                message: `Вы уверены, что хотите купить товар за ${state.calculatedPrice.toFixed(2)} ₽?`,
-                buttons: [{ type: 'ok', text: 'Да' }, { type: 'cancel', text: 'Отмена' }],
-            },
-            (buttonId) => resolve(buttonId === 'ok')
-        );
-    });
-    if (!confirmed) return;
+    openConfirmModal(amount, accountData);
+}
 
+function openConfirmModal(amount, accountData) {
+    const cfg = PRODUCT_CONFIG[state.currentProduct];
+    const unit = state.currentProduct === 'steam' ? '₽ на Steam' : '⭐';
+    document.getElementById('orderConfirmText').innerHTML =
+        `Вы уверены, что хотите создать заказ на сумму <strong>${formatRub(state.calculatedPrice)}</strong>, получив <strong>${formatNumber(amount)} ${unit}</strong>?`;
+    document.getElementById('orderConfirmModal').classList.remove('hidden');
+    document.getElementById('orderConfirmModalOverlay').classList.remove('hidden');
+
+    // Данные заказа сохраняем на кнопке — proceedWithOrder их прочитает
+    document.getElementById('orderConfirmYes').dataset.amount = amount;
+    document.getElementById('orderConfirmYes').dataset.accountData = accountData;
+}
+
+function closeConfirmModal() {
+    document.getElementById('orderConfirmModal').classList.add('hidden');
+    document.getElementById('orderConfirmModalOverlay').classList.add('hidden');
+}
+
+async function proceedWithOrder() {
+    const yesBtn = document.getElementById('orderConfirmYes');
+    const amount = parseFloat(yesBtn.dataset.amount);
+    const accountData = yesBtn.dataset.accountData;
     const price = state.calculatedPrice;
+
+    closeConfirmModal();
+    yesBtn.disabled = true;
+
     state.appData.balance -= price;
     saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     updateBalanceDisplay();
 
     const order = await createOrder(state.user.id, state.currentProduct, amount, price, accountData);
 
+    yesBtn.disabled = false;
+
     if (!order) {
         state.appData.balance += price;
         saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
         updateBalanceDisplay();
-        tg.showAlert('Не удалось создать заказ. Попробуйте позже.');
+        showToast('Не удалось создать заказ. Попробуйте позже.', 'error');
         return;
     }
 
-    state.appData.orders.push({
-        productName: state.currentProduct === 'steam' ? 'Пополнение Steam' : 'Telegram Stars',
-        date: new Date().toLocaleString('ru-RU'),
-        amount: `${amount} ${state.currentProduct === 'steam' ? '₽' : 'Stars'}`,
-    });
+    // Используем объект заказа, вернувшийся из Supabase (со статусом
+    // "pending" и настоящим id), а не собранный вручную — так профиль
+    // сразу показывает верный статус "В обработке", и его можно будет
+    // потом обновить через refreshHistoryFromServer().
+    state.appData.orders.push(order);
     saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     renderHistory();
 
@@ -282,6 +321,6 @@ async function handleOrderConfirm() {
         renderAdminOrders();
     }
 
-    document.getElementById('orderStep1').style.display = 'none';
-    document.getElementById('orderStep2').style.display = 'block';
+    closeOrderModal();
+    showToast('Заказ создан и передан в обработку', 'success');
 }

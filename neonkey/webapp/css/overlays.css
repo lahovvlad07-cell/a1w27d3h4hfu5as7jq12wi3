@@ -1,3 +1,102 @@
+/* ===== ЭКРАН ЗАГРУЗКИ ===== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0e1a;
+    background-image:
+        radial-gradient(ellipse at 20% 40%, rgba(0, 180, 255, 0.25) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(255, 200, 0, 0.20) 0%, transparent 45%),
+        linear-gradient(145deg, #0b1120 0%, #162040 60%, #0f1a2e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10010;
+    transition: opacity 0.35s ease;
+}
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+.loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+.loading-spinner {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 215, 0, 0.15);
+    border-top-color: #ffd700;
+    border-right-color: #00d4ff;
+    animation: loadingSpin 0.9s linear infinite;
+}
+@keyframes loadingSpin {
+    to { transform: rotate(360deg); }
+}
+.loading-logo {
+    color: #ffd700;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+}
+
+/* ===== ТОСТ-УВЕДОМЛЕНИЯ ===== */
+.toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(17, 27, 46, 0.97);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10005;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    max-width: 90%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.toast.hidden {
+    display: none;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.toast.success { border-color: rgba(0, 255, 136, 0.5); }
+.toast.success .toast-icon { color: #00ff88; }
+.toast.error { border-color: rgba(255, 68, 68, 0.5); }
+.toast.error .toast-icon { color: #ff4444; }
+
+/* ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ЗАКАЗА ===== */
+.confirm-modal .modal-content {
+    max-width: 340px;
+}
+.confirm-text {
+    color: #c0d0e0;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: 18px;
+}
+.confirm-text strong {
+    color: #ffd700;
+}
+
 /* ===== ЗАЩИТА ОТ НЕАВТОРИЗОВАННОГО ДОСТУПА ===== */
 .auth-overlay {
     position: fixed;

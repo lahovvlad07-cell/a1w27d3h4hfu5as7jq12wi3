@@ -47,6 +47,33 @@ export async function loadOrders(limit = 5) {
     }
 }
 
+/**
+ * Заказы конкретного пользователя — используется в профиле, чтобы
+ * подтягивать актуальный статус (например, если админ отметил заказ
+ * как "выполнен", пока приложение было закрыто). Локальная копия в
+ * appData.orders используется только для мгновенного отображения
+ * сразу после покупки, пока не пришёл ответ от Supabase.
+ */
+export async function loadUserOrders(userId, limit = 5) {
+    if (!supabaseClient) return null;
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) {
+            console.error('Ошибка загрузки заказов пользователя:', error);
+            return null;
+        }
+        return data;
+    } catch (e) {
+        console.error('Ошибка загрузки заказов пользователя:', e);
+        return null;
+    }
+}
+
 export async function updateOrderStatus(orderId, newStatus) {
     if (!supabaseClient) return { success: false, error: 'Supabase клиент не инициализирован' };
     try {

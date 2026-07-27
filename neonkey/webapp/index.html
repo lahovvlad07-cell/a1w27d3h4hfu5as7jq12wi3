@@ -18,6 +18,25 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <!-- ===== ЭКРАН ЗАГРУЗКИ =====
+         Показывается сразу и по умолчанию, пока идёт проверка авторизации
+         и загрузка профиля/настроек из Supabase. Раньше этого экрана не
+         было, а #consentOverlay был виден по умолчанию (без класса
+         hidden) — из-за этого он на долю секунды "мигал" даже у уже
+         согласившихся пользователей, пока JS не успевал понять, что
+         соглашаться повторно не нужно. Теперь весь период загрузки
+         закрыт этим экраном, и после него сразу показывается то, что
+         нужно конкретному пользователю — без скачков и мигания. -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-logo">NeonKey</div>
+        </div>
+    </div>
+
+    <!-- ===== ТОСТ-УВЕДОМЛЕНИЯ ===== -->
+    <div id="toast" class="toast hidden"></div>
+
     <!-- ===== ЗАЩИТА ОТ НЕАВТОРИЗОВАННОГО ДОСТУПА ===== -->
     <div id="authOverlay" class="auth-overlay hidden">
         <div class="auth-box">
@@ -29,7 +48,7 @@
     </div>
 
     <!-- ===== СОГЛАСИЕ С ПОЛИТИКАМИ ===== -->
-    <div id="consentOverlay" class="consent-overlay">
+    <div id="consentOverlay" class="consent-overlay hidden">
         <div class="consent-box">
             <div id="consentForm">
                 <div class="consent-icon">📋</div>
@@ -207,14 +226,27 @@
 
                     <button id="orderConfirmBtn" class="btn-neon btn-full" disabled>Купить</button>
                 </div>
-                <div id="orderStep2" style="display: none;">
-                    <p style="color: #c0d0e0; margin-bottom: 12px;">✅ Заказ успешно создан! Товар будет доставлен в ближайшее время.</p>
-                    <button id="orderCloseBtn" class="btn-neon btn-full">Закрыть</button>
-                </div>
             </div>
         </div>
     </div>
     <div id="orderModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== ПОДТВЕРЖДЕНИЕ ЗАКАЗА ===== -->
+    <div id="orderConfirmModal" class="modal hidden confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Подтверждение заказа</span>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-text" id="orderConfirmText">Вы уверены?</p>
+                <div class="consent-buttons">
+                    <button id="orderConfirmYes" class="btn-neon">Да</button>
+                    <button id="orderConfirmNo" class="btn-neon secondary">Нет</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="orderConfirmModalOverlay" class="modal-overlay hidden"></div>
 
     <!-- ===== ОСНОВНОЙ КОНТЕЙНЕР ===== -->
     <div id="app">
@@ -246,6 +278,7 @@
                         <span class="col-product">Товар</span>
                         <span class="col-date">Дата</span>
                         <span class="col-amount">Сумма</span>
+                        <span class="col-status">Статус</span>
                     </div>
                     <div id="historyList" class="history-table-body"></div>
                 </div>
