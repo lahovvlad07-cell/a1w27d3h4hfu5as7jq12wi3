@@ -69,11 +69,11 @@
                 <div class="consent-note">* Вы можете ознакомиться с документами в любой момент во вкладке «Информация».</div>
             </div>
 
-            <div id="consentDenied" style="display: none;">
+            <div id="consentDenied" class="u-hidden">
                 <div class="consent-icon">⛔</div>
-                <h2 style="color: #ff6b6b;">Доступ запрещен</h2>
+                <h2 class="text-danger">Доступ запрещен</h2>
                 <p>Если вы не согласны с условиями, вы не можете использовать сервис.</p>
-                <div class="consent-docs" style="margin: 12px 0;">
+                <div class="consent-docs mt-sm">
                     <button class="doc-link" data-doc="privacy">Политика конфиденциальности</button>
                     <button class="doc-link" data-doc="offer">Публичная оферта</button>
                 </div>
@@ -83,9 +83,9 @@
                 </div>
             </div>
 
-            <div id="consentFinalDenied" style="display: none;">
+            <div id="consentFinalDenied" class="u-hidden">
                 <div class="consent-icon">🚫</div>
-                <h2 style="color: #ff6b6b;">Доступ полностью запрещен</h2>
+                <h2 class="text-danger">Доступ полностью запрещен</h2>
                 <p>Вы отказались от принятия политик. Для повторной попытки перезагрузите приложение.</p>
                 <button id="consentReload" class="btn-neon">Обновить страницу</button>
             </div>
@@ -124,11 +124,11 @@
                 <span class="modal-title">🎉 Добро пожаловать в NeonKey!</span>
             </div>
             <div class="modal-body">
-                <p>NeonKey — это универсальный сервис для мгновенных покупок и пополнений с использованием криптовалюты.</p>
-                <p>🔹 Мгновенные переводы</p>
-                <p>🔹 Низкие комиссии</p>
-                <p>🔹 Поддержка USDT, TRX, TON</p>
-                <p style="margin-top: 16px; color: #8899bb;">Теперь выберите аватар, чтобы завершить настройку профиля.</p>
+                <p>NeonKey — сервис для покупки Steam-пополнений и Telegram Stars.</p>
+                <p>🎮 Пополнение Steam</p>
+                <p>⭐ Telegram Stars</p>
+                <p>💳 Оплата с баланса, пополнение — в крипте</p>
+                <p class="text-muted mt-md">Теперь выберите аватар, чтобы завершить настройку профиля.</p>
                 <button id="welcomeContinueBtn" class="btn-neon btn-full">Продолжить</button>
             </div>
         </div>
@@ -164,19 +164,22 @@
                         <div class="field-hint" id="depositNetworkHint">Сеть: TRC-20</div>
                     </div>
 
-                    <div id="depositLiveRate" class="order-rate-badge" style="display: none;"></div>
+                    <div id="depositLiveRate" class="order-rate-badge u-hidden"></div>
 
                     <div id="depositResult" class="order-result">
                         <div class="order-result-row highlight">
                             <span>К оплате</span>
                             <strong id="depositCryptoAmount">0.0000 USDT</strong>
                         </div>
-                        <p class="field-label" style="margin-top: 10px;">Адрес для оплаты (сеть <span id="depositAddressNetwork">TRC-20</span>):</p>
-                        <div class="result-address" id="depositAddress">Сгенерируйте адрес</div>
+                        <p class="field-label mt-sm">Адрес для оплаты (сеть <span id="depositAddressNetwork">TRC-20</span>):</p>
+                        <div class="address-row">
+                            <div class="result-address" id="depositAddress">Сгенерируйте адрес</div>
+                            <button class="copy-btn" id="depositCopyBtn" type="button" title="Скопировать">📋</button>
+                        </div>
                     </div>
 
                     <button id="depositGenerateBtn" class="btn-neon btn-full" disabled>Сгенерировать адрес</button>
-                    <button id="depositConfirmBtn" class="btn-neon btn-full btn-success" style="display: none;">✅ Я оплатил (тест)</button>
+                    <button id="depositConfirmBtn" class="btn-neon btn-full btn-success u-hidden">✅ Я оплатил (тест)</button>
                 </div>
             </div>
         </div>
@@ -342,7 +345,7 @@
                     <p>🔹 Пополнение баланса криптовалютой: <strong>USDT (TRC-20)</strong>, <strong>TON</strong>, <strong>TRX</strong></p>
                     <p>🔹 История последних заказов — в разделе «Профиль»</p>
                     <p>📢 Следите за новостями в нашем <a href="#" id="channelLink">Telegram-канале</a>.</p>
-                    <p style="color: #667799; font-size: 13px;">Это версия 1.0.0 — сервис только запускается. Список товаров и поддерживаемых валют будет расширяться; актуальный список всегда смотри в этом разделе и в каталоге.</p>
+                    <p class="text-muted-sm">Это версия 1.0.0 — сервис только запускается. Список товаров и поддерживаемых валют будет расширяться; актуальный список всегда смотри в этом разделе и в каталоге.</p>
                     <p class="version">Версия 1.0.0 · © 2026 NeonKey</p>
                 </div>
                 <div id="info-privacy" class="info-panel">
@@ -380,7 +383,7 @@
                 <p class="shop-subtitle">Управление курсами, ценами и заказами</p>
             </div>
             <div class="admin-panel-block">
-                <h3 style="color: #ffd700;">Настройки</h3>
+                <h3>Настройки</h3>
                 <div class="admin-field">
                     <label>Курс USDT (₽):</label>
                     <input type="number" id="admin_usdt_rate" step="0.01">
@@ -415,9 +418,9 @@
 
             <!-- Блок заказов -->
             <div class="admin-panel-block orders">
-                <h3 style="color: #00d4ff;">📦 Заказы</h3>
+                <h3>📦 Заказы</h3>
                 <div id="adminOrdersList">
-                    <div style="color: #667799; text-align: center; padding: 20px 0;">Загрузка...</div>
+                    <div class="text-muted-sm admin-loading-placeholder">Загрузка...</div>
                 </div>
             </div>
         </div>

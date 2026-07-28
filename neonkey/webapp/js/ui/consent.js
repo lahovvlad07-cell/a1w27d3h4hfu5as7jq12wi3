@@ -23,9 +23,9 @@ export function initConsentFlow({ onAccepted, onNeedsAvatar }) {
         onAccepted();
     } else {
         consentOverlay.classList.remove('hidden');
-        consentForm.style.display = 'block';
-        consentDenied.style.display = 'none';
-        consentFinalDenied.style.display = 'none';
+        consentForm.classList.remove('u-hidden');
+        consentDenied.classList.add('u-hidden');
+        consentFinalDenied.classList.add('u-hidden');
         console.log('Показываем оверлей согласия');
     }
 
@@ -91,20 +91,20 @@ export function initConsentFlow({ onAccepted, onNeedsAvatar }) {
 
     async function handleConsentDecline() {
         await deleteProfile(state.user.id);
-        consentForm.style.display = 'none';
-        consentDenied.style.display = 'block';
-        consentFinalDenied.style.display = 'none';
+        consentForm.classList.add('u-hidden');
+        consentDenied.classList.remove('u-hidden');
+        consentFinalDenied.classList.add('u-hidden');
     }
 
     function handleConsentRetry() {
-        consentDenied.style.display = 'none';
-        consentForm.style.display = 'block';
-        consentFinalDenied.style.display = 'none';
+        consentDenied.classList.add('u-hidden');
+        consentForm.classList.remove('u-hidden');
+        consentFinalDenied.classList.add('u-hidden');
     }
 
     async function handleConsentFinalDecline() {
         await deleteProfile(state.user.id);
-        consentDenied.style.display = 'none';
-        consentFinalDenied.style.display = 'block';
+        consentDenied.classList.add('u-hidden');
+        consentFinalDenied.classList.remove('u-hidden');
     }
 }

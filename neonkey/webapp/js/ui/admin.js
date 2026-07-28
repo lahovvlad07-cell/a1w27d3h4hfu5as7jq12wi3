@@ -69,7 +69,7 @@ export async function renderAdminOrders() {
     container.innerHTML = 'Загрузка...';
     const orders = await loadOrders(5);
     if (!orders || orders.length === 0) {
-        container.innerHTML = '<div style="color: #667799; text-align: center; padding: 20px 0;">Нет заказов</div>';
+        container.innerHTML = '<div class="text-muted-sm admin-loading-placeholder">Нет заказов</div>';
         return;
     }
 

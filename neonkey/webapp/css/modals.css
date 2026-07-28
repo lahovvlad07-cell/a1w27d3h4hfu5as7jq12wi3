@@ -118,6 +118,35 @@
     border: 1px solid #ffd70033;
     color: #ffd700;
 }
+.address-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.address-row .result-address {
+    flex: 1;
+    margin: 0;
+}
+.copy-btn {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid #ffd70033;
+    background: #0a0e1a;
+    color: #ffd700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.copy-btn:hover {
+    background: rgba(255, 215, 0, 0.1);
+    transform: scale(1.05);
+}
+.copy-btn.copied {
+    border-color: rgba(0, 255, 136, 0.5);
+    color: #00ff88;
+}
 .btn-full {
     width: 100%;
     margin-top: 12px;

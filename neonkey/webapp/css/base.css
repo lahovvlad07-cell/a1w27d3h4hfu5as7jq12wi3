@@ -50,3 +50,11 @@ body {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ===== УТИЛИТЫ ===== */
+.u-hidden { display: none !important; }
+.text-danger { color: #ff6b6b; }
+.text-muted { color: #8899bb; }
+.text-muted-sm { color: #667799; font-size: 13px; }
+.mt-sm { margin-top: 12px; }
+.mt-md { margin-top: 16px; }

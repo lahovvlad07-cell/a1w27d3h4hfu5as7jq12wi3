@@ -30,9 +30,12 @@ export async function createOrder(userId, product, amount, priceRub, accountData
             .single();
         if (error) {
             console.error('Ошибка создания заказа:', error.message, error);
-            const hint = (error.code === '42501' || /row-level security|permission|policy|RLS/i.test(error.message || ''))
-                ? ' — в Supabase не разрешена запись (INSERT) в таблицу orders для анонимного ключа. Проверь Policies для таблицы orders.'
-                : '';
+            let hint = '';
+            if (error.code === '42501' || /row-level security|permission|policy|RLS/i.test(error.message || '')) {
+                hint = ' — в Supabase не разрешена запись (INSERT) в таблицу orders для анонимного ключа. Проверь Policies для таблицы orders.';
+            } else if (/could not find the .* column/i.test(error.message || '')) {
+                hint = ' — в таблице orders в Supabase не хватает этой колонки. См. README, раздел про ошибку "Could not find column".';
+            }
             return { order: null, error: (error.message || 'неизвестная ошибка') + hint };
         }
         console.log('Заказ создан:', data);

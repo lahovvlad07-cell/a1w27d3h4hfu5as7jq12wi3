@@ -6,6 +6,7 @@ import { saveProfileToSupabase } from '../api/profile.js';
 import { supabaseClient } from '../lib/supabaseClient.js';
 import { withDefaults } from '../api/settings.js';
 import { updateBalanceDisplay } from './profileView.js';
+import { showToast } from './toast.js';
 
 const NETWORK_LABEL = {
     USDT: 'TRC-20 (Tron)',
@@ -47,6 +48,24 @@ export function initDepositModal() {
 
     document.getElementById('depositGenerateBtn').addEventListener('click', generateDepositAddress);
 
+    document.getElementById('depositCopyBtn').addEventListener('click', async () => {
+        const address = document.getElementById('depositAddress').textContent;
+        if (!address || address === 'Сгенерируйте адрес') return;
+        try {
+            await navigator.clipboard.writeText(address);
+            const btn = document.getElementById('depositCopyBtn');
+            btn.classList.add('copied');
+            btn.textContent = '✅';
+            showToast('Адрес скопирован', 'success', 1500);
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                btn.textContent = '📋';
+            }, 1500);
+        } catch (e) {
+            showToast('Не удалось скопировать', 'error');
+        }
+    });
+
     document.getElementById('depositConfirmBtn').addEventListener('click', async function () {
         const amount = parseFloat(document.getElementById('depositAmount').value);
         if (!amount || amount <= 0) {
@@ -79,7 +98,7 @@ function openDepositModal() {
     document.querySelector('.deposit-crypto-btn[data-crypto="USDT"]').classList.add('active');
     state.depositCrypto = 'USDT';
     document.getElementById('depositNetworkHint').textContent = `Сеть: ${NETWORK_LABEL.USDT}`;
-    document.getElementById('depositLiveRate').style.display = 'none';
+    document.getElementById('depositLiveRate').classList.add('u-hidden');
     hideGeneratedAddress();
     resetDepositResult();
 }
@@ -99,8 +118,8 @@ function resetDepositResult() {
 
 function hideGeneratedAddress() {
     document.getElementById('depositAddress').textContent = 'Сгенерируйте адрес';
-    document.getElementById('depositConfirmBtn').style.display = 'none';
-    document.getElementById('depositGenerateBtn').style.display = '';
+    document.getElementById('depositConfirmBtn').classList.add('u-hidden');
+    document.getElementById('depositGenerateBtn').classList.remove('u-hidden');
 }
 
 // Живой пересчёт курса — показывается сразу по мере ввода суммы,
@@ -117,13 +136,13 @@ function calculateDepositPreview() {
     const rate = settings[rateKey];
 
     if (!rate) {
-        rateBadge.style.display = 'none';
+        rateBadge.classList.add('u-hidden');
         resultDiv.classList.remove('active');
         generateBtn.disabled = true;
         return;
     }
 
-    rateBadge.style.display = '';
+    rateBadge.classList.remove('u-hidden');
     rateBadge.textContent = `Курс: 1 ${state.depositCrypto} ≈ ${rate.toFixed(2)} ₽`;
 
     if (!amount || amount <= 0) {
@@ -160,6 +179,6 @@ function generateDepositAddress() {
     // чтобы никто не отправил сюда настоящую криптовалюту.
     const address = `DEMO-${state.depositCrypto}-${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
     document.getElementById('depositAddress').textContent = address;
-    document.getElementById('depositGenerateBtn').style.display = 'none';
-    document.getElementById('depositConfirmBtn').style.display = '';
+    document.getElementById('depositGenerateBtn').classList.add('u-hidden');
+    document.getElementById('depositConfirmBtn').classList.remove('u-hidden');
 }

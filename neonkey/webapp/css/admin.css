@@ -91,6 +91,14 @@
 .admin-panel-block h3 {
     font-size: 18px;
     margin-bottom: 12px;
+    color: #ffd700;
+}
+.admin-panel-block.orders h3 {
+    color: #00d4ff;
+}
+.admin-loading-placeholder {
+    text-align: center;
+    padding: 20px 0;
 }
 .admin-field {
     margin-bottom: 12px;
