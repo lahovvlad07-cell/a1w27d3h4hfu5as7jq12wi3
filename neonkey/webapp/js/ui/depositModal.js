@@ -98,9 +98,9 @@ function openDepositModal() {
     document.querySelector('.deposit-crypto-btn[data-crypto="USDT"]').classList.add('active');
     state.depositCrypto = 'USDT';
     document.getElementById('depositNetworkHint').textContent = `Сеть: ${NETWORK_LABEL.USDT}`;
-    document.getElementById('depositLiveRate').classList.add('u-hidden');
     hideGeneratedAddress();
     resetDepositResult();
+    calculateDepositPreview(); // курс показываем сразу, ещё до ввода суммы
 }
 
 function closeDepositModal() {
@@ -109,8 +109,6 @@ function closeDepositModal() {
 }
 
 function resetDepositResult() {
-    const resultDiv = document.getElementById('depositResult');
-    resultDiv.classList.remove('active');
     document.getElementById('depositCryptoAmount').textContent = `0.0000 ${state.depositCrypto}`;
     document.getElementById('depositAddress').textContent = 'Сгенерируйте адрес';
     document.getElementById('depositGenerateBtn').disabled = true;
@@ -122,13 +120,12 @@ function hideGeneratedAddress() {
     document.getElementById('depositGenerateBtn').classList.remove('u-hidden');
 }
 
-// Живой пересчёт курса — показывается сразу по мере ввода суммы,
-// ещё до генерации адреса, чтобы пользователь сразу видел, сколько
-// криптовалюты отправлять.
+// Курс отображается всегда, как только известны настройки — не только
+// после того как пользователь начал вводить сумму. Пересчёт "К оплате"
+// и адреса по-прежнему завязан на введённую сумму.
 function calculateDepositPreview() {
     const amount = parseFloat(document.getElementById('depositAmount').value);
-    const rateBadge = document.getElementById('depositLiveRate');
-    const resultDiv = document.getElementById('depositResult');
+    const rateValueEl = document.getElementById('depositRateValue');
     const generateBtn = document.getElementById('depositGenerateBtn');
     const settings = withDefaults(state.settings);
 
@@ -136,17 +133,15 @@ function calculateDepositPreview() {
     const rate = settings[rateKey];
 
     if (!rate) {
-        rateBadge.classList.add('u-hidden');
-        resultDiv.classList.remove('active');
+        rateValueEl.textContent = '—';
         generateBtn.disabled = true;
         return;
     }
 
-    rateBadge.classList.remove('u-hidden');
-    rateBadge.textContent = `Курс: 1 ${state.depositCrypto} ≈ ${rate.toFixed(2)} ₽`;
+    rateValueEl.textContent = `1 ${state.depositCrypto} ≈ ${rate.toFixed(2)} ₽`;
 
     if (!amount || amount <= 0) {
-        resultDiv.classList.remove('active');
+        document.getElementById('depositCryptoAmount').textContent = `0.0000 ${state.depositCrypto}`;
         generateBtn.disabled = true;
         return;
     }
@@ -154,7 +149,6 @@ function calculateDepositPreview() {
     const cryptoAmount = amount / rate;
     document.getElementById('depositCryptoAmount').textContent = `${cryptoAmount.toFixed(4)} ${state.depositCrypto}`;
     document.getElementById('depositAddressNetwork').textContent = NETWORK_LABEL[state.depositCrypto];
-    resultDiv.classList.add('active');
     generateBtn.disabled = false;
 }
 

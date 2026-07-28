@@ -164,9 +164,11 @@
                         <div class="field-hint" id="depositNetworkHint">Сеть: TRC-20</div>
                     </div>
 
-                    <div id="depositLiveRate" class="order-rate-badge u-hidden"></div>
-
-                    <div id="depositResult" class="order-result">
+                    <div id="depositResult" class="order-result active">
+                        <div class="order-result-row muted" id="depositRateRow">
+                            <span>Курс</span>
+                            <strong id="depositRateValue">—</strong>
+                        </div>
                         <div class="order-result-row highlight">
                             <span>К оплате</span>
                             <strong id="depositCryptoAmount">0.0000 USDT</strong>
