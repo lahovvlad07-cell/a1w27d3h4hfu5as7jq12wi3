@@ -15,7 +15,7 @@ import { initDepositButton, initDepositModal } from './ui/depositModal.js';
 import { initShopButtons, initOrderModal } from './ui/orderModal.js';
 import { updatePricesDisplay } from './ui/shop.js';
 import { renderHistory, refreshHistoryFromServer } from './ui/history.js';
-import { renderProfile, updateBalanceDisplay } from './ui/profileView.js';
+import { renderProfile, updateBalanceDisplay, refreshBiggestDeal } from './ui/profileView.js';
 import { initTabs } from './ui/tabs.js';
 import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrders, initAdminOrdersPagination } from './ui/admin.js';
 import { initAdminConfirm } from './ui/adminConfirm.js';
@@ -93,6 +93,7 @@ import { hideLoadingOverlay } from './ui/loadingOverlay.js';
     renderHistory();
     if (state.appData.consent) {
         refreshHistoryFromServer(); // подтягивает актуальные статусы заказов
+        refreshBiggestDeal();
     }
 
     // ===== ФИНАЛ =====

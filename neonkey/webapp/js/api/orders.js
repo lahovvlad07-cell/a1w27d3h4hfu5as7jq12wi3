@@ -119,6 +119,37 @@ export async function loadOrdersByStatus(status, { limit = 5, offset = 0 } = {})
     }
 }
 
+/**
+ * Самая крупная сделка пользователя за всё время — используется в профиле.
+ * Берём максимум по price_rub среди заказов со статусом "completed" (а не
+ * среди всех статусов): "сделка" — это то, что реально прошло, а не просто
+ * оформленный, но ещё не подтверждённый или отклонённый заказ. Запрос идёт
+ * напрямую в Supabase (а не по локальному списку последних 5 заказов),
+ * поэтому результат корректен, даже если рекорд был поставлен давно и
+ * выпал из истории.
+ */
+export async function loadBiggestOrder(userId) {
+    if (!supabaseClient) return null;
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'completed')
+            .order('price_rub', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        if (error) {
+            console.error('Ошибка загрузки крупнейшей сделки:', error);
+            return null;
+        }
+        return data;
+    } catch (e) {
+        console.error('Ошибка загрузки крупнейшей сделки:', e);
+        return null;
+    }
+}
+
 /** Последние обработанные заказы (выполненные/отклонённые) — отдельно от очереди ожидания. */
 export async function loadProcessedOrders(limit = 5) {
     if (!supabaseClient) return [];

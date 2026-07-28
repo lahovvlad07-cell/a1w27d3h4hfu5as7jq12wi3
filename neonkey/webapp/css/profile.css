@@ -101,6 +101,47 @@
     box-shadow: 0 0 30px #ffd70066;
 }
 
+.stat-card {
+    background: rgba(17, 27, 46, 0.9);
+    border-radius: 20px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid rgba(191, 90, 242, 0.25);
+    box-shadow: 0 0 30px rgba(191, 90, 242, 0.08);
+}
+.stat-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.stat-label {
+    font-size: 13px;
+    color: #aabbdd;
+    letter-spacing: 0.3px;
+}
+.stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #bf5af2;
+    text-shadow: 0 0 20px rgba(191, 90, 242, 0.3);
+    margin-top: 2px;
+}
+.stat-meta {
+    font-size: 12px;
+    color: #667799;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .history-card {
     background: rgba(17, 27, 46, 0.9);
     border-radius: 20px;

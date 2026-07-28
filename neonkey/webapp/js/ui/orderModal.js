@@ -4,6 +4,8 @@ import { tg } from '../lib/telegram.js';
 import { saveLocalData } from '../lib/storage.js';
 import { loadSettings, withDefaults } from '../api/settings.js';
 import { createOrder } from '../api/orders.js';
+import { saveProfileToSupabase } from '../api/profile.js';
+import { supabaseClient } from '../lib/supabaseClient.js';
 import { ADMIN_TELEGRAM_ID } from '../config.js';
 import { updatePricesDisplay } from './shop.js';
 import { renderHistory } from './history.js';
@@ -284,6 +286,26 @@ function closeConfirmModal() {
     document.getElementById('orderConfirmModalOverlay').classList.add('hidden');
 }
 
+// Списание/возврат баланса раньше сохранялись только через saveLocalData
+// (localStorage) — в Supabase (таблица users) баланс не обновлялся вообще.
+// Локально всё выглядело правильно сразу после покупки, но при следующем
+// запуске main.js вызывает loadProfile(), который подтягивает баланс ИЗ
+// Supabase и перезаписывает им localStorage — то есть списание "откатывалось"
+// не из-за возврата средств, а потому что реального списания в базе никогда
+// и не было. Теперь баланс сохраняется в оба места так же, как это уже
+// сделано в depositModal.js при пополнении.
+async function persistBalance() {
+    saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
+    if (supabaseClient && state.appData.consent) {
+        await saveProfileToSupabase(state.user.id, {
+            avatar: state.appData.avatar,
+            orders: state.appData.orders,
+            consent: true,
+            balance: state.appData.balance,
+        });
+    }
+}
+
 async function proceedWithOrder() {
     const yesBtn = document.getElementById('orderConfirmYes');
     const amount = parseFloat(yesBtn.dataset.amount);
@@ -294,7 +316,7 @@ async function proceedWithOrder() {
     yesBtn.disabled = true;
 
     state.appData.balance -= price;
-    saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
+    await persistBalance();
     updateBalanceDisplay();
 
     const { order, error } = await createOrder(state.user.id, state.currentProduct, amount, price, accountData);
@@ -303,7 +325,7 @@ async function proceedWithOrder() {
 
     if (!order) {
         state.appData.balance += price;
-        saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
+        await persistBalance();
         updateBalanceDisplay();
         showToast(`Не удалось создать заказ: ${error || 'см. консоль'}`, 'error', 4500);
         return;
