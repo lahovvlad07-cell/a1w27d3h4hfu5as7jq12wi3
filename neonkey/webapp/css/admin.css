@@ -116,3 +116,28 @@
     background: #0d1422;
     color: #fff;
 }
+
+.admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+}
+.admin-pagination.hidden {
+    display: none;
+}
+.admin-pagination .btn-neon {
+    flex: 1;
+    padding: 9px 14px;
+    font-size: 13px;
+}
+.admin-pagination .btn-neon:disabled {
+    opacity: 0.35;
+}
+.admin-pagination-label {
+    color: #8899bb;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}

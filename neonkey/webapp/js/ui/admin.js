@@ -1,7 +1,7 @@
 // ===== АДМИН-ВКЛАДКА =====
 import { state } from '../state.js';
 import { saveSettings } from '../api/settings.js';
-import { loadOrders, updateOrderStatus } from '../api/orders.js';
+import { loadOrdersByStatus, loadProcessedOrders, updateOrderStatus } from '../api/orders.js';
 import { updatePricesDisplay } from './shop.js';
 import { confirmAdminAction } from './adminConfirm.js';
 import { showToast } from './toast.js';
@@ -65,48 +65,89 @@ export function initAdminSettingsForm() {
     });
 }
 
+const PAGE_SIZE = 5;
+let pendingPage = 0;
+
+const STATUS_MAP = {
+    pending: '<span class="order-status pending">⏳ Ожидает</span>',
+    completed: '<span class="order-status completed">✅ Выполнен</span>',
+    canceled: '<span class="order-status canceled">❌ Отклонён</span>',
+};
+
+function orderItemHtml(order, { withActions }) {
+    const statusText = STATUS_MAP[order.status] || order.status;
+    const actions = withActions ? `
+        <div class="order-actions">
+            <button class="btn-complete" data-order-id="${order.id}" data-action="complete">✅ Выполнить</button>
+            <button class="btn-cancel" data-order-id="${order.id}" data-action="cancel">❌ Отклонить</button>
+        </div>
+    ` : '';
+    return `
+        <div class="admin-order-item">
+            <div class="order-header">
+                <span class="order-id">#${order.id}</span>
+                ${statusText}
+            </div>
+            <div class="order-details">
+                <strong>Товар:</strong> ${order.product === 'steam' ? '🎮 Steam' : '⭐ Stars'} &bull;
+                <strong>Сумма:</strong> ${order.amount} ${order.product === 'steam' ? '₽' : 'Stars'} &bull;
+                <strong>Цена:</strong> ${order.price_rub.toFixed(2)} ₽
+            </div>
+            <div class="order-details">
+                <strong>Аккаунт:</strong> ${order.account_data || '—'} &bull;
+                <strong>Дата:</strong> ${new Date(order.created_at).toLocaleString('ru-RU')}
+            </div>
+            ${actions}
+        </div>
+    `;
+}
+
+export function initAdminOrdersPagination() {
+    document.getElementById('adminOrdersPrev').addEventListener('click', () => {
+        if (pendingPage > 0) {
+            pendingPage -= 1;
+            renderAdminOrders();
+        }
+    });
+    document.getElementById('adminOrdersNext').addEventListener('click', () => {
+        pendingPage += 1;
+        renderAdminOrders();
+    });
+}
+
+// Заказы "в ожидании" — отдельная очередь с постраничной навигацией
+// (5 на страницу), чтобы старый необработанный заказ никогда не
+// пропадал из виду из-за более новых заказов. Как только заказ
+// обработан (выполнен/отклонён), он покидает эту очередь сам —
+// см. renderProcessedOrders() ниже.
 export async function renderAdminOrders() {
     const container = document.getElementById('adminOrdersList');
+    const pagination = document.getElementById('adminOrdersPagination');
     container.innerHTML = 'Загрузка...';
-    const orders = await loadOrders(5);
-    if (!orders || orders.length === 0) {
-        container.innerHTML = '<div class="text-muted-sm admin-loading-placeholder">Нет заказов</div>';
+
+    const { orders, total } = await loadOrdersByStatus('pending', { limit: PAGE_SIZE, offset: pendingPage * PAGE_SIZE });
+
+    // Если на текущей странице пусто (например, обработали последний
+    // заказ последней страницы) — откатываемся на страницу назад.
+    if (orders.length === 0 && pendingPage > 0) {
+        pendingPage -= 1;
+        return renderAdminOrders();
+    }
+
+    if (total === 0) {
+        container.innerHTML = '<div class="text-muted-sm admin-loading-placeholder">Нет заказов в ожидании</div>';
+        pagination.classList.add('hidden');
+        renderProcessedOrders();
         return;
     }
 
-    const statusMap = {
-        pending: '<span class="order-status pending">⏳ Ожидает</span>',
-        completed: '<span class="order-status completed">✅ Выполнен</span>',
-        canceled: '<span class="order-status canceled">❌ Отклонён</span>',
-    };
+    container.innerHTML = orders.map((order) => orderItemHtml(order, { withActions: true })).join('');
 
-    container.innerHTML = orders.map((order) => {
-        const statusText = statusMap[order.status] || order.status;
-        const actions = order.status === 'pending' ? `
-            <div class="order-actions">
-                <button class="btn-complete" data-order-id="${order.id}" data-action="complete">✅ Выполнить</button>
-                <button class="btn-cancel" data-order-id="${order.id}" data-action="cancel">❌ Отклонить</button>
-            </div>
-        ` : '';
-        return `
-            <div class="admin-order-item">
-                <div class="order-header">
-                    <span class="order-id">#${order.id}</span>
-                    ${statusText}
-                </div>
-                <div class="order-details">
-                    <strong>Товар:</strong> ${order.product === 'steam' ? '🎮 Steam' : '⭐ Stars'} &bull;
-                    <strong>Сумма:</strong> ${order.amount} ${order.product === 'steam' ? '₽' : 'Stars'} &bull;
-                    <strong>Цена:</strong> ${order.price_rub.toFixed(2)} ₽
-                </div>
-                <div class="order-details">
-                    <strong>Аккаунт:</strong> ${order.account_data || '—'} &bull;
-                    <strong>Дата:</strong> ${new Date(order.created_at).toLocaleString('ru-RU')}
-                </div>
-                ${actions}
-            </div>
-        `;
-    }).join('');
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    pagination.classList.toggle('hidden', totalPages <= 1);
+    document.getElementById('adminOrdersPageLabel').textContent = `Стр. ${pendingPage + 1} из ${totalPages}`;
+    document.getElementById('adminOrdersPrev').disabled = pendingPage === 0;
+    document.getElementById('adminOrdersNext').disabled = pendingPage >= totalPages - 1;
 
     container.querySelectorAll('[data-action="complete"]').forEach((btn) => {
         btn.addEventListener('click', async function () {
@@ -116,6 +157,7 @@ export async function renderAdminOrders() {
             if (success) {
                 showToast('Заказ отмечен как выполненный', 'success');
                 renderAdminOrders();
+                renderProcessedOrders();
             } else {
                 showToast(`Не удалось обновить статус: ${error || 'см. консоль'}`, 'error', 4500);
             }
@@ -130,9 +172,24 @@ export async function renderAdminOrders() {
             if (success) {
                 showToast('Заказ отклонён', 'success');
                 renderAdminOrders();
+                renderProcessedOrders();
             } else {
                 showToast(`Не удалось обновить статус: ${error || 'см. консоль'}`, 'error', 4500);
             }
         });
     });
+
+    renderProcessedOrders();
+}
+
+/** Последние обработанные заказы — только для справки, без действий и без пагинации. */
+export async function renderProcessedOrders() {
+    const container = document.getElementById('adminProcessedList');
+    container.innerHTML = 'Загрузка...';
+    const orders = await loadProcessedOrders(5);
+    if (!orders || orders.length === 0) {
+        container.innerHTML = '<div class="text-muted-sm admin-loading-placeholder">Пока ничего не обработано</div>';
+        return;
+    }
+    container.innerHTML = orders.map((order) => orderItemHtml(order, { withActions: false })).join('');
 }

@@ -429,8 +429,20 @@
 
             <!-- Блок заказов -->
             <div class="admin-panel-block orders">
-                <h3>📦 Заказы</h3>
+                <h3>📦 Заказы в ожидании</h3>
                 <div id="adminOrdersList">
+                    <div class="text-muted-sm admin-loading-placeholder">Загрузка...</div>
+                </div>
+                <div class="admin-pagination hidden" id="adminOrdersPagination">
+                    <button id="adminOrdersPrev" class="btn-neon secondary">← Назад</button>
+                    <span id="adminOrdersPageLabel" class="admin-pagination-label">Стр. 1</span>
+                    <button id="adminOrdersNext" class="btn-neon secondary">Далее →</button>
+                </div>
+            </div>
+
+            <div class="admin-panel-block orders">
+                <h3>🗂 Последние обработанные</h3>
+                <div id="adminProcessedList">
                     <div class="text-muted-sm admin-loading-placeholder">Загрузка...</div>
                 </div>
             </div>

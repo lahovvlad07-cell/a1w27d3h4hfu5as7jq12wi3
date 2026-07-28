@@ -12,9 +12,10 @@ const STATUS_LABELS = {
 /**
  * Приводит запись заказа (старого локального формата без статуса,
  * либо новой — напрямую из таблицы orders в Supabase) к единому виду
- * для отрисовки.
+ * для отрисовки. `index` — позиция в исходном массиве, используется
+ * как запасной ключ сортировки для старых записей без даты.
  */
-function normalizeOrder(order) {
+function normalizeOrder(order, index) {
     if (order.product !== undefined) {
         // Новый формат — объект прямо из Supabase (или сохранённый из него)
         const isSteam = order.product === 'steam';
@@ -25,6 +26,10 @@ function normalizeOrder(order) {
             date: order.created_at ? new Date(order.created_at).toLocaleString('ru-RU') : (order.date || ''),
             amountText: `${order.amount} ${isSteam ? '₽' : 'Stars'}`,
             status: order.status || 'pending',
+            // created_at — настоящий timestamp в мс, всегда больше любого
+            // индекса массива, так что сравнение с записями без даты ниже
+            // остаётся корректным.
+            sortTime: order.created_at ? new Date(order.created_at).getTime() : index,
         };
     }
     // Старый локальный формат (заказы, созданные до этого обновления) —
@@ -38,6 +43,10 @@ function normalizeOrder(order) {
         date: order.date || '',
         amountText: order.amount || '',
         status: 'completed',
+        // Даты в старом формате не парсятся надёжно — используем позицию
+        // в массиве (порядок добавления), чтобы более новые записи всё
+        // равно оказались выше.
+        sortTime: index,
     };
 }
 
@@ -53,8 +62,15 @@ export function renderHistory() {
     }
 
     historyEmpty.style.display = 'none';
-    const lastFive = orders.slice(-5).reverse().map(normalizeOrder);
-    historyList.innerHTML = lastFive.map((order) => `
+    // Явная сортировка "сначала новые" вместо слепого .reverse() — тот
+    // предполагал, что массив всегда идёт от старых к новым, но данные
+    // из Supabase (loadUserOrders) приходят уже отсортированными по
+    // убыванию даты, так что .reverse() переворачивал их не в ту сторону.
+    const top5 = orders
+        .map((order, i) => normalizeOrder(order, i))
+        .sort((a, b) => b.sortTime - a.sortTime)
+        .slice(0, 5);
+    historyList.innerHTML = top5.map((order) => `
         <div class="history-item">
             <div class="history-item-top">
                 <span class="product-name">

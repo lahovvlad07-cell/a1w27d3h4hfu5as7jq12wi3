@@ -17,7 +17,7 @@ import { updatePricesDisplay } from './ui/shop.js';
 import { renderHistory, refreshHistoryFromServer } from './ui/history.js';
 import { renderProfile, updateBalanceDisplay } from './ui/profileView.js';
 import { initTabs } from './ui/tabs.js';
-import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrders } from './ui/admin.js';
+import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrders, initAdminOrdersPagination } from './ui/admin.js';
 import { initAdminConfirm } from './ui/adminConfirm.js';
 import { hideLoadingOverlay } from './ui/loadingOverlay.js';
 
@@ -71,6 +71,7 @@ import { hideLoadingOverlay } from './ui/loadingOverlay.js';
         if (state.user.id === ADMIN_TELEGRAM_ID) {
             showAdminTab(switchTab);
             loadAdminSettings();
+            initAdminOrdersPagination();
             renderAdminOrders();
         }
         initShopButtons();

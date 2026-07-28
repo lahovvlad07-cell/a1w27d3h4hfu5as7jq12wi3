@@ -92,13 +92,79 @@ export async function loadUserOrders(userId, limit = 5) {
     }
 }
 
+/**
+ * Заказы конкретного статуса с пагинацией — используется в админке для
+ * очереди "в ожидании", чтобы старые необработанные заказы не пропадали
+ * из виду, если появляются новые (раньше вся выборка была лимитом 5
+ * "самых свежих заказов вообще", и необработанный заказ мог просто
+ * вытесниться более новыми, уже обработанными).
+ */
+export async function loadOrdersByStatus(status, { limit = 5, offset = 0 } = {}) {
+    if (!supabaseClient) return { orders: [], total: 0 };
+    try {
+        const { data, error, count } = await supabaseClient
+            .from('orders')
+            .select('*', { count: 'exact' })
+            .eq('status', status)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+        if (error) {
+            console.error('Ошибка загрузки заказов по статусу:', error);
+            return { orders: [], total: 0 };
+        }
+        return { orders: data || [], total: count || 0 };
+    } catch (e) {
+        console.error('Ошибка загрузки заказов по статусу:', e);
+        return { orders: [], total: 0 };
+    }
+}
+
+/** Последние обработанные заказы (выполненные/отклонённые) — отдельно от очереди ожидания. */
+export async function loadProcessedOrders(limit = 5) {
+    if (!supabaseClient) return [];
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('*')
+            .in('status', ['completed', 'canceled'])
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) {
+            console.error('Ошибка загрузки обработанных заказов:', error);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.error('Ошибка загрузки обработанных заказов:', e);
+        return [];
+    }
+}
+
 export async function updateOrderStatus(orderId, newStatus) {
     if (!supabaseClient) return { success: false, error: 'Supabase клиент не инициализирован' };
     try {
-        const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .update({ status: newStatus })
+            .eq('id', orderId)
+            .select();
         if (error) {
             console.error('Ошибка обновления статуса:', error.message, error);
-            return { success: false, error: error.message || 'неизвестная ошибка' };
+            const hint = (error.code === '42501' || /row-level security|permission|policy|RLS/i.test(error.message || ''))
+                ? ' — в Supabase не разрешён UPDATE в таблицу orders для анонимного ключа. Проверь Policies для таблицы orders.'
+                : '';
+            return { success: false, error: (error.message || 'неизвестная ошибка') + hint };
+        }
+        // ВАЖНО: Supabase не возвращает error, если RLS-политика UPDATE
+        // просто не пропустила ни одной строки (например, есть политика
+        // "USING (auth.uid() = user_id)", а анонимный ключ никогда не
+        // авторизован через Supabase Auth) — запрос "успешно" ничего не
+        // меняет. Поэтому проверяем, что строка реально вернулась.
+        if (!data || data.length === 0) {
+            return {
+                success: false,
+                error: 'Заказ не найден или запись заблокирована политикой RLS (UPDATE) для таблицы orders для анонимного ключа — см. README.',
+            };
         }
         console.log(`Заказ ${orderId} обновлён на ${newStatus}`);
         return { success: true, error: null };
