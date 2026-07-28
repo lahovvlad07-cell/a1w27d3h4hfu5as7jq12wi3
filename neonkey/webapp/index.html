@@ -253,6 +253,23 @@
     </div>
     <div id="orderConfirmModalOverlay" class="modal-overlay hidden"></div>
 
+    <!-- ===== УНИВЕРСАЛЬНОЕ ПОДТВЕРЖДЕНИЕ (используется в админке) ===== -->
+    <div id="adminConfirmModal" class="modal hidden confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Подтверждение</span>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-text" id="adminConfirmText">Вы уверены?</p>
+                <div class="consent-buttons">
+                    <button id="adminConfirmYes" class="btn-neon">Да</button>
+                    <button id="adminConfirmNo" class="btn-neon secondary">Нет</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="adminConfirmModalOverlay" class="modal-overlay hidden"></div>
+
     <!-- ===== ОСНОВНОЙ КОНТЕЙНЕР ===== -->
     <div id="app">
         <!-- Вкладка Профиль -->
@@ -278,15 +295,7 @@
 
             <div class="history-card">
                 <div class="history-header">📋 Последние заказы</div>
-                <div class="history-table">
-                    <div class="history-table-header">
-                        <span class="col-product">Товар</span>
-                        <span class="col-date">Дата</span>
-                        <span class="col-amount">Сумма</span>
-                        <span class="col-status">Статус</span>
-                    </div>
-                    <div id="historyList" class="history-table-body"></div>
-                </div>
+                <div id="historyList" class="history-list"></div>
                 <div class="history-empty" id="historyEmpty">
                     <span class="empty-icon">📭</span>
                     <span>Пока ничего нет</span>

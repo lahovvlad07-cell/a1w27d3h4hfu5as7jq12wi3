@@ -56,13 +56,16 @@ export function renderHistory() {
     const lastFive = orders.slice(-5).reverse().map(normalizeOrder);
     historyList.innerHTML = lastFive.map((order) => `
         <div class="history-item">
-            <span class="product-name">
-                ${order.icon ? `<span class="product-icon-small">${order.icon}</span>` : ''}
-                ${order.name}
-            </span>
-            <span class="order-date">${order.date}</span>
-            <span class="order-amount">${order.amountText}</span>
-            <span class="order-status-cell"><span class="status-pill ${order.status}">${STATUS_LABELS[order.status] || order.status}</span></span>
+            <div class="history-item-top">
+                <span class="product-name">
+                    ${order.icon ? `<span class="product-icon-small">${order.icon}</span>` : ''}${order.name}
+                </span>
+                <span class="status-pill ${order.status}">${STATUS_LABELS[order.status] || order.status}</span>
+            </div>
+            <div class="history-item-bottom">
+                <span class="order-date">${order.date}</span>
+                <span class="order-amount">${order.amountText}</span>
+            </div>
         </div>
     `).join('');
 }

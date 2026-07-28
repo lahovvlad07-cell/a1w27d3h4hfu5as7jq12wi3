@@ -18,6 +18,7 @@ import { renderHistory, refreshHistoryFromServer } from './ui/history.js';
 import { renderProfile, updateBalanceDisplay } from './ui/profileView.js';
 import { initTabs } from './ui/tabs.js';
 import { showAdminTab, loadAdminSettings, initAdminSettingsForm, renderAdminOrders } from './ui/admin.js';
+import { initAdminConfirm } from './ui/adminConfirm.js';
 import { hideLoadingOverlay } from './ui/loadingOverlay.js';
 
 (async function initApp() {
@@ -64,6 +65,7 @@ import { hideLoadingOverlay } from './ui/loadingOverlay.js';
     initDepositModal();
     initOrderModal();
     initAdminSettingsForm();
+    initAdminConfirm();
 
     function activateFullShopExperience() {
         if (state.user.id === ADMIN_TELEGRAM_ID) {

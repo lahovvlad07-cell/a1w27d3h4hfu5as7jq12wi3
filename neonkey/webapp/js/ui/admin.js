@@ -1,9 +1,10 @@
 // ===== АДМИН-ВКЛАДКА =====
 import { state } from '../state.js';
-import { tg } from '../lib/telegram.js';
 import { saveSettings } from '../api/settings.js';
 import { loadOrders, updateOrderStatus } from '../api/orders.js';
 import { updatePricesDisplay } from './shop.js';
+import { confirmAdminAction } from './adminConfirm.js';
+import { showToast } from './toast.js';
 
 export function showAdminTab(switchTab) {
     const bottomNav = document.getElementById('bottomNav');
@@ -109,30 +110,29 @@ export async function renderAdminOrders() {
 
     container.querySelectorAll('[data-action="complete"]').forEach((btn) => {
         btn.addEventListener('click', async function () {
-            const confirmed = await confirmPopup('Вы уверены, что хотите отметить заказ как выполненный?');
+            const confirmed = await confirmAdminAction('Вы уверены, что хотите отметить заказ как выполненный?');
             if (!confirmed) return;
             const { success, error } = await updateOrderStatus(this.dataset.orderId, 'completed');
-            if (success) renderAdminOrders();
-            else tg.showAlert(`Не удалось обновить статус: ${error || 'см. консоль'}`);
+            if (success) {
+                showToast('Заказ отмечен как выполненный', 'success');
+                renderAdminOrders();
+            } else {
+                showToast(`Не удалось обновить статус: ${error || 'см. консоль'}`, 'error', 4500);
+            }
         });
     });
 
     container.querySelectorAll('[data-action="cancel"]').forEach((btn) => {
         btn.addEventListener('click', async function () {
-            const confirmed = await confirmPopup('Вы уверены, что хотите отклонить заказ?');
+            const confirmed = await confirmAdminAction('Вы уверены, что хотите отклонить заказ?');
             if (!confirmed) return;
             const { success, error } = await updateOrderStatus(this.dataset.orderId, 'canceled');
-            if (success) renderAdminOrders();
-            else tg.showAlert(`Не удалось обновить статус: ${error || 'см. консоль'}`);
+            if (success) {
+                showToast('Заказ отклонён', 'success');
+                renderAdminOrders();
+            } else {
+                showToast(`Не удалось обновить статус: ${error || 'см. консоль'}`, 'error', 4500);
+            }
         });
-    });
-}
-
-function confirmPopup(message) {
-    return new Promise((resolve) => {
-        tg.showPopup(
-            { title: 'Подтверждение', message, buttons: [{ type: 'ok', text: 'Да' }, { type: 'cancel', text: 'Отмена' }] },
-            (buttonId) => resolve(buttonId === 'ok')
-        );
     });
 }
