@@ -27,7 +27,6 @@ body {
         radial-gradient(ellipse at 80% 70%, rgba(255, 200, 0, 0.20) 0%, transparent 45%),
         radial-gradient(ellipse at 50% 100%, rgba(150, 50, 255, 0.15) 0%, transparent 50%),
         linear-gradient(145deg, #0b1120 0%, #162040 60%, #0f1a2e 100%);
-    background-attachment: fixed;
 }
 
 #app {

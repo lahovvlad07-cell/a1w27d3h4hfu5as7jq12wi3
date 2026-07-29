@@ -4,8 +4,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(13, 20, 34, 0.9);
-    backdrop-filter: blur(12px);
+    background: rgba(13, 20, 34, 0.96);
     display: flex;
     justify-content: space-around;
     padding: 8px 0 12px;
