@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeonKey</title>
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/overlays.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/shop.css">
+    <link rel="stylesheet" href="css/info.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/admin.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <!-- ===== ЭКРАН ЗАГРУЗКИ =====
+         Показывается сразу и по умолчанию, пока идёт проверка авторизации
+         и загрузка профиля/настроек из Supabase. Раньше этого экрана не
+         было, а #consentOverlay был виден по умолчанию (без класса
+         hidden) — из-за этого он на долю секунды "мигал" даже у уже
+         согласившихся пользователей, пока JS не успевал понять, что
+         соглашаться повторно не нужно. Теперь весь период загрузки
+         закрыт этим экраном, и после него сразу показывается то, что
+         нужно конкретному пользователю — без скачков и мигания. -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-logo">NeonKey</div>
+        </div>
+    </div>
+
+    <!-- ===== ТОСТ-УВЕДОМЛЕНИЯ ===== -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- ===== ЗАЩИТА ОТ НЕАВТОРИЗОВАННОГО ДОСТУПА ===== -->
+    <div id="authOverlay" class="auth-overlay hidden">
+        <div class="auth-box">
+            <div class="auth-icon">🔐</div>
+            <h2>Требуется авторизация</h2>
+            <p>Пожалуйста, откройте это приложение через Telegram.</p>
+            <button id="authRetryBtn" class="btn-neon">Обновить</button>
+        </div>
+    </div>
+
+    <!-- ===== СОГЛАСИЕ С ПОЛИТИКАМИ ===== -->
+    <div id="consentOverlay" class="consent-overlay hidden">
+        <div class="consent-box">
+            <div id="consentForm">
+                <div class="consent-icon">📋</div>
+                <h2>Добро пожаловать в NeonKey!</h2>
+                <p>Перед началом работы ознакомьтесь с документами:</p>
+                <div class="consent-docs">
+                    <button class="doc-link" data-doc="privacy">Политика конфиденциальности</button>
+                    <button class="doc-link" data-doc="offer">Публичная оферта</button>
+                </div>
+                <div class="consent-check">
+                    <input type="checkbox" id="consentCheck">
+                    <label for="consentCheck">Я принимаю условия Политики конфиденциальности и Публичной оферты</label>
+                </div>
+                <div class="consent-buttons">
+                    <button id="consentAccept" class="btn-neon" disabled>Принять</button>
+                    <button id="consentDecline" class="btn-neon secondary">Отказаться</button>
+                </div>
+                <div class="consent-note">* Вы можете ознакомиться с документами в любой момент во вкладке «Информация».</div>
+            </div>
+
+            <div id="consentDenied" class="u-hidden">
+                <div class="consent-icon">⛔</div>
+                <h2 class="text-danger">Доступ запрещен</h2>
+                <p>Если вы не согласны с условиями, вы не можете использовать сервис.</p>
+                <div class="consent-docs mt-sm">
+                    <button class="doc-link" data-doc="privacy">Политика конфиденциальности</button>
+                    <button class="doc-link" data-doc="offer">Публичная оферта</button>
+                </div>
+                <div class="consent-buttons">
+                    <button id="consentRetry" class="btn-neon">Принять</button>
+                    <button id="consentFinalDecline" class="btn-neon secondary">Отказаться</button>
+                </div>
+            </div>
+
+            <div id="consentFinalDenied" class="u-hidden">
+                <div class="consent-icon">🚫</div>
+                <h2 class="text-danger">Доступ полностью запрещен</h2>
+                <p>Вы отказались от принятия политик. Для повторной попытки перезагрузите приложение.</p>
+                <button id="consentReload" class="btn-neon">Обновить страницу</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== БАННЕР МИГРАЦИИ ===== -->
+    <div id="migrationBanner" class="migration-banner hidden">
+        <div class="banner-content">
+            <span class="banner-icon">⚠️</span>
+            <div class="banner-text">
+                <strong>Внимание!</strong> Мы переезжаем на новый сервер.
+                Все данные на этом сайте будут удалены через <span id="countdownDays">7</span> дней.
+                Пожалуйста, потратьте свой баланс до этого времени.
+            </div>
+            <button class="banner-close" id="bannerCloseBtn">&times;</button>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ДОКУМЕНТОВ ===== -->
+    <div id="docModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="docModalTitle">Документ</span>
+                <button class="modal-close" id="docModalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="docModalBody"></div>
+        </div>
+    </div>
+    <div id="docModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ПРИВЕТСТВИЯ ===== -->
+    <div id="welcomeModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🎉 Добро пожаловать в NeonKey!</span>
+            </div>
+            <div class="modal-body">
+                <p>NeonKey — сервис для покупки Steam-пополнений и Telegram Stars.</p>
+                <p>🎮 Пополнение Steam</p>
+                <p>⭐ Telegram Stars</p>
+                <p>💳 Оплата с баланса, пополнение — в крипте</p>
+                <p class="text-muted mt-md">Теперь выберите аватар, чтобы завершить настройку профиля.</p>
+                <button id="welcomeContinueBtn" class="btn-neon btn-full">Продолжить</button>
+            </div>
+        </div>
+    </div>
+    <div id="welcomeModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ПОПОЛНЕНИЯ ===== -->
+    <div id="depositModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">💰 Пополнение баланса</span>
+                <button class="modal-close" id="depositModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="depositStep1">
+                    <div class="deposit-demo-banner" id="depositInfoBanner">⏱ Адрес действителен 30 минут. Отправляйте точную сумму указанной валюты в указанной сети — иначе платёж не будет засчитан автоматически.</div>
+
+                    <div class="order-field">
+                        <label class="field-label">Сумма пополнения</label>
+                        <div class="order-input-wrap">
+                            <input type="number" id="depositAmount" placeholder="Введите сумму" class="field-input" inputmode="decimal">
+                            <span class="order-input-suffix">₽</span>
+                        </div>
+                    </div>
+
+                    <div class="order-field">
+                        <label class="field-label">Валюта</label>
+                        <div class="deposit-crypto-row">
+                            <button class="btn-product deposit-crypto-btn active" data-crypto="USDT">USDT</button>
+                            <button class="btn-product deposit-crypto-btn" data-crypto="TON">TON</button>
+                            <button class="btn-product deposit-crypto-btn" data-crypto="TRX">TRX</button>
+                        </div>
+                        <div class="field-hint" id="depositNetworkHint">Сеть: TRC-20</div>
+                    </div>
+
+                    <div id="depositResult" class="order-result active">
+                        <div class="order-result-row muted" id="depositRateRow">
+                            <span>Курс</span>
+                            <strong id="depositRateValue">—</strong>
+                        </div>
+                        <div class="order-result-row muted u-hidden" id="depositCommissionRow">
+                            <span>Комиссия сети</span>
+                            <strong id="depositCommissionValue">—</strong>
+                        </div>
+                        <div class="order-result-row highlight">
+                            <span>К оплате</span>
+                            <strong id="depositCryptoAmount">0.0000 USDT</strong>
+                        </div>
+                        <p class="field-label mt-sm">Адрес для оплаты (сеть <span id="depositAddressNetwork">TRC-20</span>):</p>
+                        <div class="address-row">
+                            <div class="result-address" id="depositAddress">Сгенерируйте адрес</div>
+                            <button class="copy-btn" id="depositCopyBtn" type="button" title="Скопировать">📋</button>
+                        </div>
+                        <div class="deposit-status-row u-hidden" id="depositPendingInfo">
+                            <span id="depositStatusText">⏳ Ожидаем платёж...</span>
+                            <strong id="depositTimer">30:00</strong>
+                        </div>
+                    </div>
+
+                    <button id="depositGenerateBtn" class="btn-neon btn-full" disabled>Сгенерировать адрес</button>
+                    <button id="depositCheckBtn" class="btn-neon btn-full u-hidden">🔄 Проверить</button>
+                    <button id="depositCancelBtn" class="btn-neon btn-full btn-outline u-hidden">Отменить / новый платёж</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="depositModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ЗАКАЗА (ОПЛАТА С БАЛАНСА) ===== -->
+    <div id="orderModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="orderModalTitle">Оформление заказа</span>
+                <button class="modal-close" id="orderModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="orderStep1">
+                    <div class="order-rate-badge" id="orderRateBadge">Курс: —</div>
+
+                    <div class="order-field">
+                        <label class="field-label" id="orderAccountLabel">Данные аккаунта</label>
+                        <input type="text" id="orderAccountData" placeholder="" class="field-input" autocomplete="off">
+                        <div class="field-error" id="orderAccountError"></div>
+                    </div>
+
+                    <div class="order-field">
+                        <label class="field-label" id="orderAmountLabel">Сумма</label>
+                        <div class="order-input-wrap">
+                            <input type="number" id="orderAmount" placeholder="Введите сумму" class="field-input" inputmode="decimal">
+                            <span class="order-input-suffix" id="orderAmountSuffix">₽</span>
+                        </div>
+                        <div class="field-hint" id="orderMinHint">Минимальная сумма: <span id="orderMinValue">0</span></div>
+                    </div>
+
+                    <div id="orderResult" class="order-result">
+                        <div class="order-result-row">
+                            <span>Вы получите</span>
+                            <strong id="orderReceiveValue">—</strong>
+                        </div>
+                        <div class="order-result-row highlight">
+                            <span>К оплате с баланса</span>
+                            <strong id="orderPriceRub">0.00 ₽</strong>
+                        </div>
+                        <div class="order-result-row muted">
+                            <span>Баланс после покупки</span>
+                            <strong id="orderBalanceAfter">0.00 ₽</strong>
+                        </div>
+                    </div>
+
+                    <button id="orderConfirmBtn" class="btn-neon btn-full" disabled>Купить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="orderModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== ПОДТВЕРЖДЕНИЕ ЗАКАЗА ===== -->
+    <div id="orderConfirmModal" class="modal hidden confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Подтверждение заказа</span>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-text" id="orderConfirmText">Вы уверены?</p>
+                <div class="consent-buttons">
+                    <button id="orderConfirmYes" class="btn-neon">Да</button>
+                    <button id="orderConfirmNo" class="btn-neon secondary">Нет</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="orderConfirmModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== УНИВЕРСАЛЬНОЕ ПОДТВЕРЖДЕНИЕ (используется в админке) ===== -->
+    <div id="adminConfirmModal" class="modal hidden confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Подтверждение</span>
+            </div>
+            <div class="modal-body">
+                <p class="confirm-text" id="adminConfirmText">Вы уверены?</p>
+                <div class="consent-buttons">
+                    <button id="adminConfirmYes" class="btn-neon">Да</button>
+                    <button id="adminConfirmNo" class="btn-neon secondary">Нет</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="adminConfirmModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== ОСНОВНОЙ КОНТЕЙНЕР ===== -->
+    <div id="app">
+        <!-- Вкладка Профиль -->
+        <div id="page-profile" class="page active">
+            <div class="profile-header">
+                <div class="avatar-wrapper" id="avatarWrapper">
+                    <div class="avatar" id="userAvatar">👤</div>
+                </div>
+                <div class="user-name" id="userName">Загрузка...</div>
+                <div class="user-id" id="userId"></div>
+            </div>
+
+            <div class="balance-card">
+                <div class="balance-row">
+                    <div class="balance-icon">💰</div>
+                    <div class="balance-content">
+                        <div class="balance-label">Ваш баланс</div>
+                        <div class="balance-value" id="balance">0.00 ₽</div>
+                    </div>
+                </div>
+                <button class="btn-neon" id="btnDeposit">Пополнить</button>
+            </div>
+
+            <div class="stat-card" id="biggestDealCard">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-content">
+                    <div class="stat-label">Самая крупная сделка</div>
+                    <div class="stat-value" id="biggestDealValue">—</div>
+                    <div class="stat-meta" id="biggestDealMeta">Пока нет завершённых сделок</div>
+                </div>
+            </div>
+
+            <div class="history-card">
+                <div class="history-header">📋 Последние заказы</div>
+                <div id="historyList" class="history-list"></div>
+                <div class="history-empty" id="historyEmpty">
+                    <span class="empty-icon">📭</span>
+                    <span>Пока ничего нет</span>
+                </div>
+                <div class="history-note">* Сохраняется только 5 последних заказов</div>
+            </div>
+        </div>
+
+        <!-- Вкладка Магазин -->
+        <div id="page-shop" class="page">
+            <div class="shop-header">
+                <h2>🛒 Каталог</h2>
+                <p class="shop-subtitle">Выберите товар для покупки</p>
+            </div>
+            <div class="shop-grid">
+                <div class="product-card" data-product="steam">
+                    <div class="product-icon-wrapper"><span class="product-icon">🎮</span></div>
+                    <div class="product-info">
+                        <div class="product-name">Пополнение Steam</div>
+                        <div class="product-description">Мгновенное пополнение баланса</div>
+                        <div class="product-price" id="steamPriceDisplay">от 100 ₽</div>
+                    </div>
+                    <button class="btn-product buy-btn" data-product="steam">Купить</button>
+                </div>
+                <div class="product-card" data-product="stars">
+                    <div class="product-icon-wrapper"><span class="product-icon">⭐</span></div>
+                    <div class="product-info">
+                        <div class="product-name">Telegram Stars</div>
+                        <div class="product-description">Звёзды для вашего канала</div>
+                        <div class="product-price" id="starsPriceDisplay">от 50 Stars</div>
+                    </div>
+                    <button class="btn-product buy-btn" data-product="stars">Купить</button>
+                </div>
+                <div class="product-card soon" data-product="soon">
+                    <div class="product-icon-wrapper"><span class="product-icon">🔜</span></div>
+                    <div class="product-info">
+                        <div class="product-name">Новые товары</div>
+                        <div class="product-description">Скоро появятся</div>
+                        <div class="product-price">—</div>
+                    </div>
+                    <button class="btn-product disabled" disabled>В разработке</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Информация -->
+        <div id="page-info" class="page">
+            <div class="info-tabs">
+                <button class="info-tab active" data-tab="about">О проекте</button>
+                <button class="info-tab" data-tab="privacy">Политика</button>
+                <button class="info-tab" data-tab="offer">Оферта</button>
+            </div>
+            <div class="info-content">
+                <div id="info-about" class="info-panel active">
+                    <h2>🚀 О проекте NeonKey</h2>
+                    <p>NeonKey — сервис для покупки Steam-пополнений и Telegram Stars с оплатой через внутренний баланс.</p>
+                    <p>🔹 Мгновенное зачисление после оплаты</p>
+                    <p>🔹 Пополнение баланса криптовалютой: <strong>USDT (TRC-20)</strong>, <strong>TON</strong>, <strong>TRX</strong></p>
+                    <p>🔹 История последних заказов — в разделе «Профиль»</p>
+                    <p>📢 Следите за новостями в нашем <a href="#" id="channelLink">Telegram-канале</a>.</p>
+                    <p class="text-muted-sm">Это версия 1.0.0 — сервис только запускается. Список товаров и поддерживаемых валют будет расширяться; актуальный список всегда смотри в этом разделе и в каталоге.</p>
+                    <p class="version">Версия 1.0.0 · © 2026 NeonKey</p>
+                </div>
+                <div id="info-privacy" class="info-panel">
+                    <h2>Политика конфиденциальности</h2>
+                    <p><strong>1. Общие положения</strong><br>Настоящая Политика конфиденциальности (далее – Политика) действует в отношении всей информации, которую NeonKey (далее – Сервис) может получить о пользователе во время использования Сервиса.</p>
+                    <p><strong>2. Собираемые данные</strong><br>Сервис собирает только те данные, которые предоставляет Telegram: идентификатор пользователя, имя, username, а также информацию о заказах.</p>
+                    <p><strong>3. Использование данных</strong><br>Данные используются исключительно для функционирования Сервиса: идентификации пользователя, отображения истории заказов и выполнения транзакций.</p>
+                    <p><strong>4. Передача данных третьим лицам</strong><br>Сервис не передаёт персональные данные третьим лицам, за исключением случаев, предусмотренных законодательством.</p>
+                    <p><strong>5. Безопасность</strong><br>Сервис принимает необходимые меры для защиты данных от несанкционированного доступа.</p>
+                    <p><strong>6. Изменение Политики</strong><br>Сервис оставляет за собой право вносить изменения в Политику. Новая редакция вступает в силу с момента её публикации.</p>
+                    <p><em>Дата последнего обновления: 26 июля 2026 г.</em></p>
+                </div>
+                <div id="info-offer" class="info-panel">
+                    <h2>Публичная оферта</h2>
+                    <p><strong>1. Предмет оферты</strong><br>Настоящий документ является официальным предложением Сервиса NeonKey (далее – Исполнитель) заключить договор на оказание услуг по приобретению цифровых товаров (далее – Услуги).</p>
+                    <p><strong>2. Условия оказания Услуг</strong><br>2.1. Заказчик (пользователь) выбирает товар в каталоге Сервиса и инициирует оплату.<br>2.2. Оплата производится криптовалютой (USDT в сети TRC-20, TON, TRX) на указанный Сервисом адрес. Список поддерживаемых валют может расширяться по мере развития Сервиса.<br>2.3. После подтверждения оплаты Исполнитель предоставляет Заказчику доступ к приобретённому товару или услуге.</p>
+                    <p><strong>3. Ответственность сторон</strong><br>3.1. Исполнитель не несёт ответственности за действия платёжных систем и блокчейн-сетей.<br>3.2. Заказчик обязуется использовать Сервис только в законных целях.</p>
+                    <p><strong>4. Порядок разрешения споров</strong><br>Все споры решаются путём переговоров. При невозможности достижения согласия спор передаётся в суд по месту нахождения Исполнителя.</p>
+                    <p><strong>5. Заключительные положения</strong><br>Используя Сервис, Заказчик принимает условия настоящей Оферты.</p>
+                    <p><em>Дата последнего обновления: 26 июля 2026 г.</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== АДМИН-ВКЛАДКА =====
+             Примечание: раньше здесь было inline style="display:none", а JS
+             отдельно проставлял style.display="block". Инлайн-стиль в HTML
+             перебивает CSS-классы, поэтому вкладка могла "залипать" видимой
+             поверх других вкладок после первого захода в Админ. Теперь
+             видимость управляется исключительно классом .active, как и у
+             остальных вкладок — баг устранён. -->
+        <div id="page-admin" class="page">
+            <div class="shop-header">
+                <h2>🛠 Админ-панель</h2>
+                <p class="shop-subtitle">Управление курсами, ценами и заказами</p>
+            </div>
+            <div class="admin-panel-block">
+                <h3>Настройки</h3>
+                <div class="admin-field">
+                    <label>Курс USDT (₽):</label>
+                    <input type="number" id="admin_usdt_rate" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Курс TON (₽):</label>
+                    <input type="number" id="admin_ton_rate" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Курс TRX (₽):</label>
+                    <input type="number" id="admin_trx_rate" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Цена 1 Stars (₽):</label>
+                    <input type="number" id="admin_stars_price" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Цена 1 ₽ Steam (₽):</label>
+                    <input type="number" id="admin_steam_price" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Мин. сумма для Steam (₽):</label>
+                    <input type="number" id="admin_steam_min" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Мин. Stars:</label>
+                    <input type="number" id="admin_stars_min" step="1">
+                </div>
+
+                <h3 class="admin-subheading">Пополнение балансом (крипта)</h3>
+                <div class="admin-commission-group">
+                    <p class="admin-commission-title">USDT (TRC-20)</p>
+                    <div class="admin-field">
+                        <label>Комиссия:</label>
+                        <div class="admin-commission-row">
+                            <select id="admin_commission_type_usdt">
+                                <option value="0">₽ фиксированная</option>
+                                <option value="1">% от суммы</option>
+                            </select>
+                            <input type="number" id="admin_commission_value_usdt" step="0.01">
+                        </div>
+                    </div>
+                    <div class="admin-field">
+                        <label>Мин. сумма пополнения (₽):</label>
+                        <input type="number" id="admin_min_usdt" step="1">
+                    </div>
+                </div>
+                <div class="admin-commission-group">
+                    <p class="admin-commission-title">TRX</p>
+                    <div class="admin-field">
+                        <label>Комиссия:</label>
+                        <div class="admin-commission-row">
+                            <select id="admin_commission_type_trx">
+                                <option value="0">₽ фиксированная</option>
+                                <option value="1">% от суммы</option>
+                            </select>
+                            <input type="number" id="admin_commission_value_trx" step="0.01">
+                        </div>
+                    </div>
+                    <div class="admin-field">
+                        <label>Мин. сумма пополнения (₽):</label>
+                        <input type="number" id="admin_min_trx" step="1">
+                    </div>
+                </div>
+                <div class="admin-commission-group">
+                    <p class="admin-commission-title">TON</p>
+                    <div class="admin-field">
+                        <label>Комиссия:</label>
+                        <div class="admin-commission-row">
+                            <select id="admin_commission_type_ton">
+                                <option value="0">₽ фиксированная</option>
+                                <option value="1">% от суммы</option>
+                            </select>
+                            <input type="number" id="admin_commission_value_ton" step="0.01">
+                        </div>
+                    </div>
+                    <div class="admin-field">
+                        <label>Мин. сумма пополнения (₽):</label>
+                        <input type="number" id="admin_min_ton" step="1">
+                    </div>
+                </div>
+
+                <button id="adminSaveBtn" class="btn-neon btn-full">Сохранить настройки</button>
+                <div id="adminStatus"></div>
+            </div>
+
+            <!-- Блок заказов -->
+            <div class="admin-panel-block orders">
+                <h3>📦 Заказы в ожидании</h3>
+                <div id="adminOrdersList">
+                    <div class="text-muted-sm admin-loading-placeholder">Загрузка...</div>
+                </div>
+                <div class="admin-pagination hidden" id="adminOrdersPagination">
+                    <button id="adminOrdersPrev" class="btn-neon secondary">← Назад</button>
+                    <span id="adminOrdersPageLabel" class="admin-pagination-label">Стр. 1</span>
+                    <button id="adminOrdersNext" class="btn-neon secondary">Далее →</button>
+                </div>
+            </div>
+
+            <div class="admin-panel-block orders">
+                <h3>🗂 Последние обработанные</h3>
+                <div id="adminProcessedList">
+                    <div class="text-muted-sm admin-loading-placeholder">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+        <div class="bottom-nav" id="bottomNav">
+            <div class="nav-item active" data-tab="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Профиль</span>
+            </div>
+            <div class="nav-item" data-tab="shop">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Магазин</span>
+            </div>
+            <div class="nav-item" data-tab="info">
+                <span class="nav-icon">ℹ️</span>
+                <span class="nav-label">Информация</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ВЫБОРА АВАТАРА ===== -->
+    <div id="avatarModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Выберите аватар</span>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-grid" id="avatarGrid"></div>
+                <button id="avatarConfirmBtn" class="btn-neon">Продолжить</button>
+                <p class="modal-hint">Нажмите на эмодзи, чтобы выбрать аватар, затем нажмите «Продолжить».</p>
+            </div>
+        </div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay hidden"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
