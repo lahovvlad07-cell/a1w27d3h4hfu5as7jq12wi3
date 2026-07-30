@@ -1,0 +1,90 @@
+/* ===== ИНФОРМАЦИЯ ===== */
+.info-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+.info-tab {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: #8899bb;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.3s;
+    white-space: nowrap;
+}
+.info-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.info-tab.active {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: #ffd700;
+    color: #ffd700;
+}
+.info-content {
+    background: rgba(17, 27, 46, 0.9);
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    min-height: 320px;
+}
+.info-panel {
+    display: none;
+}
+.info-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+.info-panel h2 {
+    color: #ffd700;
+    font-size: 22px;
+    margin-bottom: 14px;
+}
+.info-panel p {
+    margin: 10px 0;
+    line-height: 1.6;
+    color: #c0d0e0;
+    font-size: 14px;
+}
+.info-panel strong {
+    color: #fff;
+}
+.info-panel a {
+    color: #00d4ff;
+    text-decoration: none;
+    border-bottom: 1px dashed #00d4ff;
+}
+.info-panel em {
+    color: #667799;
+    font-size: 13px;
+}
+.version {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #445577;
+    text-align: center;
+}
+
+/* ===== УСИЛЕННЫЕ СТИЛИ ДЛЯ ТЕКСТА В МОДАЛКЕ ПОЛИТИК (чтобы точно был белым) ===== */
+#docModalBody,
+#docModalBody * {
+    color: #e0e0e0 !important;
+}
+#docModalBody p {
+    color: #c0d0e0 !important;
+}
+#docModalBody strong {
+    color: #ffd700 !important;
+}
+#docModalBody em {
+    color: #667799 !important;
+}
+#docModalBody h2 {
+    color: #ffd700 !important;
+}
