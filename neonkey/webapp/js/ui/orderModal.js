@@ -1,7 +1,6 @@
 // ===== МОДАЛЬНОЕ ОКНО ЗАКАЗА (ОПЛАТА С БАЛАНСА) =====
 import { state } from '../state.js';
 import { tg } from '../lib/telegram.js';
-import { saveLocalData } from '../lib/storage.js';
 import { loadSettings, withDefaults } from '../api/settings.js';
 import { createOrder } from '../api/orders.js';
 import { saveProfileToSupabase } from '../api/profile.js';
@@ -290,16 +289,9 @@ function closeConfirmModal() {
     document.getElementById('orderConfirmModalOverlay').classList.add('hidden');
 }
 
-// Списание/возврат баланса раньше сохранялись только через saveLocalData
-// (localStorage) — в Supabase (таблица users) баланс не обновлялся вообще.
-// Локально всё выглядело правильно сразу после покупки, но при следующем
-// запуске main.js вызывает loadProfile(), который подтягивает баланс ИЗ
-// Supabase и перезаписывает им localStorage — то есть списание "откатывалось"
-// не из-за возврата средств, а потому что реального списания в базе никогда
-// и не было. Теперь баланс сохраняется в оба места так же, как это уже
-// сделано в depositModal.js при пополнении.
+// Списание/возврат баланса сохраняются в Supabase (таблица users) —
+// это единственное место, где баланс живёт. Локальной копии больше нет.
 async function persistBalance() {
-    saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     if (supabaseClient && state.appData.consent) {
         await saveProfileToSupabase(state.user.id, {
             avatar: state.appData.avatar,
@@ -340,7 +332,6 @@ async function proceedWithOrder() {
     // сразу показывает верный статус "В обработке", и его можно будет
     // потом обновить через refreshHistoryFromServer().
     state.appData.orders.push(order);
-    saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     renderHistory();
 
     if (state.user.id === ADMIN_TELEGRAM_ID) {

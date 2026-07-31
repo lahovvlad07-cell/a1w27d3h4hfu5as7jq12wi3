@@ -1,7 +1,6 @@
 // ===== СОГЛАСИЕ С ПОЛИТИКАМИ =====
 import { state } from '../state.js';
 import { tg } from '../lib/telegram.js';
-import { saveLocalConsent, loadLocalData, getDefaultData } from '../lib/storage.js';
 import { saveProfileToSupabase, deleteProfile } from '../api/profile.js';
 import { loadSettings } from '../api/settings.js';
 
@@ -71,14 +70,12 @@ export function initConsentFlow({ onAccepted, onNeedsAvatar }) {
             tg.showAlert('Пожалуйста, поставьте галочку, чтобы принять условия.');
             return;
         }
-        saveLocalConsent(true);
         state.appData.consent = true;
-        const localData = loadLocalData() || getDefaultData();
         await saveProfileToSupabase(state.user.id, {
-            avatar: localData.avatar || '👤',
-            orders: localData.orders || [],
+            avatar: state.appData.avatar || '👤',
+            orders: state.appData.orders || [],
             consent: true,
-            balance: localData.balance || 0,
+            balance: state.appData.balance || 0,
         });
         state.settings = (await loadSettings()) || {};
         consentOverlay.classList.add('hidden');

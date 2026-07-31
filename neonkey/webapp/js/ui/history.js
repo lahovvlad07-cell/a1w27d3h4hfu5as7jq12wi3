@@ -1,7 +1,6 @@
 // ===== ИСТОРИЯ ЗАКАЗОВ (ПРОФИЛЬ) =====
 import { state } from '../state.js';
 import { loadUserOrders } from '../api/orders.js';
-import { saveLocalData } from '../lib/storage.js';
 
 const STATUS_LABELS = {
     pending: 'В обработке',
@@ -98,10 +97,5 @@ export async function refreshHistoryFromServer() {
     if (!serverOrders) return; // Supabase недоступен — оставляем локальные данные как есть
 
     state.appData.orders = serverOrders;
-    saveLocalData({
-        avatar: state.appData.avatar,
-        orders: state.appData.orders,
-        balance: state.appData.balance,
-    });
     renderHistory();
 }

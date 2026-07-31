@@ -1,7 +1,6 @@
 // ===== ПОПОЛНЕНИЕ БАЛАНСА (реальный флоу через neonkey-pay) =====
 import { state } from '../state.js';
 import { tg } from '../lib/telegram.js';
-import { saveLocalData } from '../lib/storage.js';
 import { withDefaults } from '../api/settings.js';
 import { loadProfile } from '../api/profile.js';
 import { updateBalanceDisplay } from './profileView.js';
@@ -37,12 +36,24 @@ let currentDeposit = null; // { depositId, apiCurrency, uiCurrency, expectedAmou
 let checkInterval = null;
 let countdownInterval = null;
 
-async function payApiFetch(path, body) {
-    const res = await fetch(`${PAY_API_URL}${path}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: tg.initData, ...body }),
-    });
+async function payApiFetch(path, body, _retried = false) {
+    let res;
+    try {
+        res = await fetch(`${PAY_API_URL}${path}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData, ...body }),
+        });
+    } catch (networkError) {
+        // "Failed to fetch" — запрос не дошёл вообще (не HTTP-ошибка с сервера,
+        // а сетевой сбой/обрыв). Часто это разовая заминка холодного старта
+        // сервера — один автоматический повтор решает её без участия человека.
+        if (!_retried) {
+            await new Promise((r) => setTimeout(r, 1500));
+            return payApiFetch(path, body, true);
+        }
+        throw new Error('Не удалось связаться с платёжным сервисом (нет ответа от сервера). Попробуйте ещё раз через минуту.');
+    }
     let data = {};
     try { data = await res.json(); } catch (e) { /* пустой ответ */ }
     if (!res.ok) {
@@ -274,7 +285,16 @@ function startCountdown() {
 
         if (remainingMs <= 0) {
             timerEl.textContent = '00:00';
-            handleExpired();
+            clearInterval(countdownInterval);
+            // Раньше здесь просто вызывался handleExpired() — красил UI
+            // локально, но не трогал сервер, поэтому депозит оставался
+            // pending в базе, пока (если) его не просрочит фоновый воркер.
+            // Теперь явно спрашиваем сервер — verifyDeposit() сам либо
+            // подтвердит платёж, если он всё же успел прийти впритык,
+            // либо пометит депозит expired в базе прямо сейчас.
+            performCheck(false).then(() => {
+                if (currentDeposit && currentDeposit.status === 'pending') handleExpired();
+            });
             return;
         }
         const m = Math.floor(remainingMs / 60000);
@@ -347,7 +367,6 @@ async function handleConfirmed() {
     // не разойтись с реальным значением.
     const profile = await loadProfile(state.user.id);
     state.appData.balance = profile.balance || 0;
-    saveLocalData({ avatar: state.appData.avatar, orders: state.appData.orders, balance: state.appData.balance });
     updateBalanceDisplay();
     tg.showAlert('✅ Баланс пополнен!');
     currentDeposit = null;

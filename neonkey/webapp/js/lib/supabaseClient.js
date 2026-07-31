@@ -8,5 +8,5 @@ try {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase клиент инициализирован');
 } catch (e) {
-    console.warn('⚠️ Supabase не загрузился, используем localStorage', e);
+    console.warn('⚠️ Supabase не загрузился — приложение будет работать только в памяти этой сессии', e);
 }

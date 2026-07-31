@@ -59,7 +59,7 @@ export function initAvatarModal() {
             tg.showAlert('Выберите аватар.');
             return;
         }
-        await updateProfileField(state.user.id, 'avatar', selectedAvatarEmoji);
+        await updateProfileField(state.user.id, state.appData, 'avatar', selectedAvatarEmoji);
         state.appData.avatar = selectedAvatarEmoji;
         avatarEl.textContent = selectedAvatarEmoji;
         closeAvatarModal();

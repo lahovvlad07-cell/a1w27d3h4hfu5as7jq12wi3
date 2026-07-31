@@ -1,7 +1,7 @@
 // ===== ТОЧКА ВХОДА ПРИЛОЖЕНИЯ =====
 import { state } from './state.js';
 import { tg, requireAuth } from './lib/telegram.js';
-import { loadLocalData, getDefaultData, loadLocalConsent } from './lib/storage.js';
+import { getDefaultData } from './lib/storage.js';
 import { loadProfile } from './api/profile.js';
 import { loadSettings } from './api/settings.js';
 import { ADMIN_TELEGRAM_ID } from './config.js';
@@ -46,9 +46,8 @@ import { hideLoadingOverlay } from './ui/loadingOverlay.js';
         state.appData.balance = profile.balance || 0;
         console.log('✅ Профиль загружен:', state.appData);
     } catch (e) {
-        console.error('❌ Ошибка загрузки профиля, используем localStorage', e);
-        const local = loadLocalData() || getDefaultData();
-        state.appData = { ...local, consent: loadLocalConsent() };
+        console.error('❌ Ошибка загрузки профиля — работаем только в памяти этой сессии', e);
+        state.appData = { ...getDefaultData(), consent: false };
     }
 
     // ===== ЗАГРУЗКА НАСТРОЕК (если согласие уже дано) =====

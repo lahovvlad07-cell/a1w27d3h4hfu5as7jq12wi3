@@ -1,17 +1,17 @@
 // ===== РАБОТА С ПРОФИЛЕМ ПОЛЬЗОВАТЕЛЯ =====
+// Единственный источник правды — Supabase (таблица users). Локального
+// кэша/резервной копии в localStorage больше нет: если Supabase
+// недоступен, приложение работает только в рамках текущей сессии (в
+// памяти, state.appData), ничего не сохраняя на диск браузера — это
+// осознанный компромисс, чтобы данные разных Telegram-аккаунтов не
+// могли перепутаться на одном устройстве.
 import { supabaseClient } from '../lib/supabaseClient.js';
-import { getDefaultData, loadLocalData, saveLocalData, loadLocalConsent, saveLocalConsent } from '../lib/storage.js';
+import { getDefaultData } from '../lib/storage.js';
 
 export async function loadProfile(userId) {
     if (!supabaseClient) {
-        console.warn('⚠️ Supabase не доступен, используем локальное хранилище');
-        const local = loadLocalData();
-        if (local) {
-            return { ...local, consent: loadLocalConsent() || false };
-        }
-        saveLocalData({ avatar: '👤', orders: [], balance: 0 });
-        saveLocalConsent(false);
-        return { avatar: '👤', orders: [], consent: false, balance: 0 };
+        console.warn('⚠️ Supabase недоступен — работаем только в памяти этой сессии, без сохранения');
+        return { ...getDefaultData(), consent: false };
     }
 
     try {
@@ -23,24 +23,16 @@ export async function loadProfile(userId) {
 
         if (!error && data) {
             console.log('✅ Загружено из Supabase:', data);
-            saveLocalData({ avatar: data.avatar, orders: data.orders, balance: data.balance });
-            saveLocalConsent(data.consent);
             return data;
         }
 
         if (error) console.error('❌ Ошибка получения пользователя из Supabase:', error);
         else console.log('ℹ️ Пользователь не найден в Supabase');
 
-        const local = loadLocalData();
-        return local
-            ? { ...local, consent: loadLocalConsent() || false }
-            : { avatar: '👤', orders: [], consent: false, balance: 0 };
+        return { ...getDefaultData(), consent: false };
     } catch (e) {
         console.warn('⚠️ Ошибка Supabase:', e);
-        const local = loadLocalData();
-        return local
-            ? { ...local, consent: loadLocalConsent() || false }
-            : { avatar: '👤', orders: [], consent: false, balance: 0 };
+        return { ...getDefaultData(), consent: false };
     }
 }
 
@@ -88,27 +80,17 @@ export async function saveProfileToSupabase(userId, data) {
 }
 
 export async function deleteProfile(userId) {
-    if (supabaseClient) {
-        try {
-            const { error } = await supabaseClient.from('users').delete().eq('user_id', userId);
-            if (error) console.error('Ошибка удаления профиля из Supabase:', error);
-            else console.log('Профиль удалён из Supabase');
-        } catch (e) {
-            console.warn('Ошибка при удалении из Supabase:', e);
-        }
+    if (!supabaseClient) return;
+    try {
+        const { error } = await supabaseClient.from('users').delete().eq('user_id', userId);
+        if (error) console.error('Ошибка удаления профиля из Supabase:', error);
+        else console.log('Профиль удалён из Supabase');
+    } catch (e) {
+        console.warn('Ошибка при удалении из Supabase:', e);
     }
-    localStorage.removeItem('neonkey_data_local');
-    localStorage.removeItem('neonkey_consent_local');
 }
 
-export async function updateProfileField(userId, field, value) {
-    const local = loadLocalData() || getDefaultData();
-    local[field] = value;
-    saveLocalData(local);
-    if (field === 'consent') saveLocalConsent(value);
-
-    if (loadLocalConsent() && supabaseClient) {
-        const fullData = { ...local, consent: loadLocalConsent() };
-        await saveProfileToSupabase(userId, fullData);
-    }
+/** Обновляет одно поле профиля в Supabase, отталкиваясь от текущих данных в памяти (state.appData). */
+export async function updateProfileField(userId, currentData, field, value) {
+    return saveProfileToSupabase(userId, { ...currentData, [field]: value });
 }
