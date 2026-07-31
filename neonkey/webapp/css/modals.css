@@ -186,6 +186,24 @@
 }
 
 /* ===== ФОРМА ЗАКАЗА (Steam / Stars) — живой предпросчёт ===== */
+.delivery-note {
+    padding: 10px 12px;
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    border-radius: 10px;
+    color: #aabbdd;
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+.delivery-note strong {
+    color: #ffd700;
+}
+.delivery-note a {
+    color: #00d4ff;
+    text-decoration: none;
+    border-bottom: 1px dashed #00d4ff;
+}
 .order-rate-badge {
     display: flex;
     align-items: center;

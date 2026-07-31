@@ -6,7 +6,7 @@ import { loadSettings, withDefaults } from '../api/settings.js';
 import { createOrder } from '../api/orders.js';
 import { saveProfileToSupabase } from '../api/profile.js';
 import { supabaseClient } from '../lib/supabaseClient.js';
-import { ADMIN_TELEGRAM_ID } from '../config.js';
+import { ADMIN_TELEGRAM_ID, SUPPORT_URL } from '../config.js';
 import { updatePricesDisplay } from './shop.js';
 import { renderHistory } from './history.js';
 import { renderAdminOrders } from './admin.js';
@@ -99,6 +99,10 @@ export function initOrderModal() {
         calculateOrder();
     });
     document.getElementById('orderConfirmBtn').addEventListener('click', handleOrderConfirm);
+    document.getElementById('orderSupportLink')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        tg.openLink(SUPPORT_URL);
+    });
 
     // ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ЗАКАЗА =====
     document.getElementById('orderConfirmYes').addEventListener('click', proceedWithOrder);
@@ -344,5 +348,5 @@ async function proceedWithOrder() {
     }
 
     closeOrderModal();
-    showToast('Заказ создан и передан в обработку', 'success');
+    showToast('Заказ создан и передан в обработку — обычно доставка занимает до 3 часов', 'success', 4000);
 }

@@ -5,7 +5,7 @@ import { loadSettings } from '../api/settings.js';
 import { updatePricesDisplay } from './shop.js';
 import { refreshHistoryFromServer } from './history.js';
 import { refreshBiggestDeal } from './profileView.js';
-import { CHANNEL_URL } from '../config.js';
+import { CHANNEL_URL, SUPPORT_URL } from '../config.js';
 
 export function initTabs() {
     const pages = {
@@ -74,6 +74,10 @@ export function initTabs() {
     document.getElementById('channelLink')?.addEventListener('click', (e) => {
         e.preventDefault();
         tg.openLink(CHANNEL_URL);
+    });
+    document.getElementById('channelLinkSupport')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        tg.openLink(SUPPORT_URL);
     });
 
     return { switchTab };

@@ -238,6 +238,13 @@
                         </div>
                     </div>
 
+                    <div class="delivery-note">
+                        ⏳ Доставка не мгновенная — заказы обрабатываются вручную.
+                        Обычно в течение <strong>3 часов</strong>, но иногда бывают
+                        задержки — до <strong>12 часов</strong>. Если прошло больше
+                        12 часов, а заказ всё ещё «В обработке» — <a href="#" id="orderSupportLink">напиши в поддержку</a>.
+                    </div>
+
                     <button id="orderConfirmBtn" class="btn-neon btn-full" disabled>Купить</button>
                 </div>
             </div>
@@ -333,7 +340,7 @@
                     <div class="product-icon-wrapper"><span class="product-icon">🎮</span></div>
                     <div class="product-info">
                         <div class="product-name">Пополнение Steam</div>
-                        <div class="product-description">Мгновенное пополнение баланса</div>
+                        <div class="product-description">Пополнение вручную, обычно за 3 часа</div>
                         <div class="product-price" id="steamPriceDisplay">от 100 ₽</div>
                     </div>
                     <button class="btn-product buy-btn" data-product="steam">Купить</button>
@@ -342,7 +349,7 @@
                     <div class="product-icon-wrapper"><span class="product-icon">⭐</span></div>
                     <div class="product-info">
                         <div class="product-name">Telegram Stars</div>
-                        <div class="product-description">Звёзды для вашего канала</div>
+                        <div class="product-description">Доставка вручную, обычно за 3 часа</div>
                         <div class="product-price" id="starsPriceDisplay">от 50 Stars</div>
                     </div>
                     <button class="btn-product buy-btn" data-product="stars">Купить</button>
@@ -370,8 +377,8 @@
                 <div id="info-about" class="info-panel active">
                     <h2>🚀 О проекте NeonKey</h2>
                     <p>NeonKey — сервис для покупки Steam-пополнений и Telegram Stars с оплатой через внутренний баланс.</p>
-                    <p>🔹 Мгновенное зачисление после оплаты</p>
-                    <p>🔹 Пополнение баланса криптовалютой: <strong>USDT (TRC-20)</strong>, <strong>TON</strong>, <strong>TRX</strong></p>
+                    <p>🔹 Пополнение баланса криптовалютой (<strong>USDT (TRC-20)</strong>, <strong>TON</strong>, <strong>TRX</strong>) зачисляется автоматически, обычно за пару минут после оплаты</p>
+                    <p>🔹 Сама покупка (Steam / Stars) доставляется вручную — обычно в течение <strong>3 часов</strong>, иногда с задержками до <strong>12 часов</strong>. Если прошло больше 12 часов, а заказ всё ещё «В обработке» — напиши в <a href="#" id="channelLinkSupport">поддержку</a></p>
                     <p>🔹 История последних заказов — в разделе «Профиль»</p>
                     <p>📢 Следите за новостями в нашем <a href="#" id="channelLink">Telegram-канале</a>.</p>
                     <p class="text-muted-sm">Это версия 1.0.0 — сервис только запускается. Список товаров и поддерживаемых валют будет расширяться; актуальный список всегда смотри в этом разделе и в каталоге.</p>
