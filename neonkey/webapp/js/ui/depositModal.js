@@ -7,10 +7,14 @@ import { updateBalanceDisplay } from './profileView.js';
 import { showToast } from './toast.js';
 import { PAY_API_URL, DEPOSIT_EXPIRY_MINUTES } from '../config.js';
 
+// TRX — нативная монета сети TRON (не токен), поэтому у неё нет TRC-20.
+// TRC-20 — это стандарт токенов НА сети TRON, им пользуется именно USDT.
+// TON исторически на старте проекта назывался Gram — уточняем в скобках,
+// чтобы люди, которые помнят это название, не путались, что это тот же TON.
 const NETWORK_LABEL = {
-    USDT: 'TRC-20 (Tron)',
-    TRX: 'Tron (TRC-20)',
-    TON: 'TON',
+    USDT: 'TRC-20 (сеть TRON)',
+    TRX: 'TRON (нативная монета сети)',
+    TON: 'TON (ранее Gram)',
 };
 
 // Код валюты в интерфейсе (USDT/TON/TRX) -> код, который понимает API neonkey-pay.

@@ -27,10 +27,22 @@
     align-items: center;
     gap: 16px;
     border: 1px solid rgba(42, 58, 90, 0.4);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(4px);
+    /* backdrop-filter убран: карточка и так почти непрозрачная (0.85),
+       блюр визуально почти не заметен, зато на телефонах (особенно в
+       Telegram WebView на Android) он создаёт отдельный композитный
+       слой на КАЖДУЮ карточку в списке — это одна из главных причин
+       лагов в "Магазине" именно на мобильных (на десктопе GPU мощнее,
+       поэтому там незаметно). transition: all -> явные свойства по
+       той же причине: "all" заставляет браузер отслеживать изменения
+       вообще всех CSS-свойств на каждый кадр анимации. */
+}
+.crypto-btn-sub {
+    font-size: 11px;
+    opacity: 0.65;
+    font-weight: 400;
 }
 .product-card::before {
     content: '';
