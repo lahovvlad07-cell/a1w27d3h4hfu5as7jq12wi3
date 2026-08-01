@@ -68,6 +68,10 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    color: #c0d0e0;
+}
+.modal-body p {
+    color: #c0d0e0;
 }
 
 /* ===== ОБЩИЕ ПОЛЯ ФОРМ ВНУТРИ МОДАЛОК (пополнение / заказ) ===== */

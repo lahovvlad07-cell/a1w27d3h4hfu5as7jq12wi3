@@ -25,6 +25,8 @@ export function loadAdminSettings() {
         admin_usdt_rate: s.usdt_rate,
         admin_ton_rate: s.ton_rate,
         admin_trx_rate: s.trx_rate,
+        admin_cryptobot_rate: s.cryptobot_rate,
+        admin_xrocket_rate: s.xrocket_rate,
         admin_stars_price: s.stars_price,
         admin_steam_price: s.steam_price,
         admin_steam_min: s.steam_min,
@@ -38,6 +40,12 @@ export function loadAdminSettings() {
         admin_commission_type_ton: s.commission_type_ton,
         admin_commission_value_ton: s.commission_value_ton,
         admin_min_ton: s.min_ton,
+        admin_commission_type_cryptobot: s.commission_type_cryptobot,
+        admin_commission_value_cryptobot: s.commission_value_cryptobot,
+        admin_min_cryptobot: s.min_cryptobot,
+        admin_commission_type_xrocket: s.commission_type_xrocket,
+        admin_commission_value_xrocket: s.commission_value_xrocket,
+        admin_min_xrocket: s.min_xrocket,
     };
     Object.entries(map).forEach(([id, value]) => {
         if (value !== undefined && value !== null) {
@@ -52,6 +60,8 @@ export function initAdminSettingsForm() {
             usdt_rate: parseFloat(document.getElementById('admin_usdt_rate').value) || 0,
             ton_rate: parseFloat(document.getElementById('admin_ton_rate').value) || 0,
             trx_rate: parseFloat(document.getElementById('admin_trx_rate').value) || 0,
+            cryptobot_rate: parseFloat(document.getElementById('admin_cryptobot_rate').value) || 0,
+            xrocket_rate: parseFloat(document.getElementById('admin_xrocket_rate').value) || 0,
             stars_price: parseFloat(document.getElementById('admin_stars_price').value) || 0,
             steam_price: parseFloat(document.getElementById('admin_steam_price').value) || 0,
             steam_min: parseFloat(document.getElementById('admin_steam_min').value) || 0,
@@ -65,6 +75,12 @@ export function initAdminSettingsForm() {
             commission_type_ton: parseFloat(document.getElementById('admin_commission_type_ton').value) || 0,
             commission_value_ton: parseFloat(document.getElementById('admin_commission_value_ton').value) || 0,
             min_ton: parseFloat(document.getElementById('admin_min_ton').value) || 0,
+            commission_type_cryptobot: parseFloat(document.getElementById('admin_commission_type_cryptobot').value) || 0,
+            commission_value_cryptobot: parseFloat(document.getElementById('admin_commission_value_cryptobot').value) || 0,
+            min_cryptobot: parseFloat(document.getElementById('admin_min_cryptobot').value) || 0,
+            commission_type_xrocket: parseFloat(document.getElementById('admin_commission_type_xrocket').value) || 0,
+            commission_value_xrocket: parseFloat(document.getElementById('admin_commission_value_xrocket').value) || 0,
+            min_xrocket: parseFloat(document.getElementById('admin_min_xrocket').value) || 0,
         };
         const statusEl = document.getElementById('adminStatus');
         statusEl.textContent = '⏳ Сохранение...';

@@ -160,6 +160,8 @@
                             <button class="btn-product deposit-crypto-btn active" data-crypto="USDT">USDT <span class="crypto-btn-sub">(TRC20)</span></button>
                             <button class="btn-product deposit-crypto-btn" data-crypto="TON">TON <span class="crypto-btn-sub">(Gram)</span></button>
                             <button class="btn-product deposit-crypto-btn" data-crypto="TRX">TRX <span class="crypto-btn-sub">(Tron)</span></button>
+                            <button class="btn-product deposit-crypto-btn" data-crypto="CRYPTOBOT">CryptoBot <span class="crypto-btn-sub">(инвойс)</span></button>
+                            <button class="btn-product deposit-crypto-btn" data-crypto="XROCKET">xRocket <span class="crypto-btn-sub">(инвойс)</span></button>
                         </div>
                         <div class="field-hint" id="depositNetworkHint">Сеть: TRC-20</div>
                     </div>
@@ -181,6 +183,9 @@
                         <div class="address-row">
                             <div class="result-address" id="depositAddress">Сгенерируйте адрес</div>
                             <button class="copy-btn" id="depositCopyBtn" type="button" title="Скопировать">📋</button>
+                        </div>
+                        <div class="address-row u-hidden" id="depositPayLinkRow">
+                            <button class="btn-neon btn-full" id="depositPayLinkBtn" type="button">🔗 Перейти к оплате</button>
                         </div>
                         <div class="deposit-status-row u-hidden" id="depositPendingInfo">
                             <span id="depositStatusText">⏳ Ожидаем платёж...</span>
@@ -433,6 +438,14 @@
                     <input type="number" id="admin_trx_rate" step="0.01">
                 </div>
                 <div class="admin-field">
+                    <label>Курс CryptoBot, USDT (₽):</label>
+                    <input type="number" id="admin_cryptobot_rate" step="0.01">
+                </div>
+                <div class="admin-field">
+                    <label>Курс xRocket, USDT (₽):</label>
+                    <input type="number" id="admin_xrocket_rate" step="0.01">
+                </div>
+                <div class="admin-field">
                     <label>Цена 1 Stars (₽):</label>
                     <input type="number" id="admin_stars_price" step="0.01">
                 </div>
@@ -499,6 +512,41 @@
                     <div class="admin-field">
                         <label>Мин. сумма пополнения (₽):</label>
                         <input type="number" id="admin_min_ton" step="1">
+                    </div>
+                </div>
+
+                <div class="admin-commission-group">
+                    <p class="admin-commission-title">CryptoBot</p>
+                    <div class="admin-field">
+                        <label>Комиссия:</label>
+                        <div class="admin-commission-row">
+                            <select id="admin_commission_type_cryptobot">
+                                <option value="0">₽ фиксированная</option>
+                                <option value="1">% от суммы</option>
+                            </select>
+                            <input type="number" id="admin_commission_value_cryptobot" step="0.01">
+                        </div>
+                    </div>
+                    <div class="admin-field">
+                        <label>Мин. сумма пополнения (₽):</label>
+                        <input type="number" id="admin_min_cryptobot" step="1">
+                    </div>
+                </div>
+                <div class="admin-commission-group">
+                    <p class="admin-commission-title">xRocket</p>
+                    <div class="admin-field">
+                        <label>Комиссия:</label>
+                        <div class="admin-commission-row">
+                            <select id="admin_commission_type_xrocket">
+                                <option value="0">₽ фиксированная</option>
+                                <option value="1">% от суммы</option>
+                            </select>
+                            <input type="number" id="admin_commission_value_xrocket" step="0.01">
+                        </div>
+                    </div>
+                    <div class="admin-field">
+                        <label>Мин. сумма пополнения (₽):</label>
+                        <input type="number" id="admin_min_xrocket" step="1">
                     </div>
                 </div>
 

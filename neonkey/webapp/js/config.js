@@ -41,6 +41,11 @@ export const DEFAULT_SETTINGS = {
     usdt_rate: 90,
     ton_rate: 700,
     trx_rate: 15,
+    // Курсы для инвойс-провайдеров (CryptoBot/xRocket выставляют счёт в
+    // USDT по умолчанию — см. neonkey-pay/lib/providers/*.ts — поэтому
+    // курс по умолчанию равен курсу USDT, но это отдельная настройка).
+    cryptobot_rate: 90,
+    xrocket_rate: 90,
     stars_price: 1.5,
     steam_price: 1,
     steam_min: 100,
@@ -53,10 +58,16 @@ export const DEFAULT_SETTINGS = {
     commission_value_trx: 15,
     commission_type_ton: 0,
     commission_value_ton: 0,
+    commission_type_cryptobot: 0,
+    commission_value_cryptobot: 0,
+    commission_type_xrocket: 0,
+    commission_value_xrocket: 0,
     // Минимальная сумма пополнения в рублях, отдельно по валюте.
     min_usdt: 3000,
     min_trx: 10,
     min_ton: 10,
+    min_cryptobot: 100,
+    min_xrocket: 100,
 };
 
 export const AVATAR_EMOJIS = [

@@ -15,13 +15,25 @@ const NETWORK_LABEL = {
     USDT: 'TRC-20 (сеть TRON)',
     TRX: 'TRON (нативная монета сети)',
     TON: 'TON (ранее Gram)',
+    CRYPTOBOT: 'Инвойс CryptoBot',
+    XROCKET: 'Инвойс xRocket',
 };
 
-// Код валюты в интерфейсе (USDT/TON/TRX) -> код, который понимает API neonkey-pay.
-const API_CURRENCY = { USDT: 'USDT_TRC20', TON: 'TON', TRX: 'TRX' };
+// Валюты, для которых сервер выдаёт ссылку на оплату инвойса вместо
+// собственного адреса — их отображение в модалке отличается (см.
+// renderPendingUI ниже: кнопка "Перейти к оплате" вместо адреса+копии).
+const INVOICE_BASED = new Set(['CRYPTOBOT', 'XROCKET']);
+
+// Код валюты в интерфейсе (USDT/TON/TRX/CRYPTOBOT/XROCKET) -> код, который понимает API neonkey-pay.
+const API_CURRENCY = { USDT: 'USDT_TRC20', TON: 'TON', TRX: 'TRX', CRYPTOBOT: 'CRYPTOBOT', XROCKET: 'XROCKET' };
 // Ключи настроек в таблице settings — те же суффиксы, что и в неонкей-pay/lib/rates.ts.
-const SETTINGS_SUFFIX = { USDT: 'usdt', TON: 'ton', TRX: 'trx' };
-const RATE_KEY = { USDT: 'usdt_rate', TON: 'ton_rate', TRX: 'trx_rate' };
+const SETTINGS_SUFFIX = { USDT: 'usdt', TON: 'ton', TRX: 'trx', CRYPTOBOT: 'cryptobot', XROCKET: 'xrocket' };
+const RATE_KEY = { USDT: 'usdt_rate', TON: 'ton_rate', TRX: 'trx_rate', CRYPTOBOT: 'cryptobot_rate', XROCKET: 'xrocket_rate' };
+// Для сумм в интерфейсе: у CryptoBot/xRocket валюта интерфейса — это
+// название провайдера, а не тикер актива, поэтому сумму подписываем
+// названием реального актива инвойса (см. CRYPTOBOT_ASSET/XROCKET_ASSET
+// в neonkey-pay/.env.example — по умолчанию USDT для обоих).
+const ASSET_LABEL = { USDT: 'USDT', TON: 'TON', TRX: 'TRX', CRYPTOBOT: 'USDT', XROCKET: 'USDT' };
 
 function formatRub(n) {
     return `${Number(n).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`;
@@ -36,7 +48,7 @@ function pad2(n) {
 // Текущий незавершённый депозит — живёт на уровне модуля (не сбрасывается
 // при простом закрытии модалки), чтобы таймер/поллинг продолжали идти,
 // даже если пользователь свернул модалку и открыл её снова.
-let currentDeposit = null; // { depositId, apiCurrency, uiCurrency, expectedAmountCrypto, commissionRub, createdAt, expiresInMinutes, address, status }
+let currentDeposit = null; // { depositId, apiCurrency, uiCurrency, expectedAmountCrypto, commissionRub, createdAt, expiresInMinutes, address, payUrl, status }
 let checkInterval = null;
 let countdownInterval = null;
 
@@ -154,6 +166,8 @@ function resetToForm() {
     document.getElementById('depositNetworkHint').textContent = `Сеть: ${NETWORK_LABEL.USDT}`;
 
     document.getElementById('depositAddress').textContent = 'Сгенерируйте адрес';
+    document.getElementById('depositAddress').closest('.address-row').classList.remove('u-hidden');
+    document.getElementById('depositPayLinkRow').classList.add('u-hidden');
     document.getElementById('depositCommissionRow').classList.add('u-hidden');
     document.getElementById('depositPendingInfo').classList.add('u-hidden');
     document.getElementById('depositTimer').classList.remove('u-hidden');
@@ -206,7 +220,7 @@ function calculateDepositPreview() {
     }
 
     const totalCrypto = (amount + commissionRub) / rate;
-    document.getElementById('depositCryptoAmount').textContent = formatCrypto(totalCrypto, cur);
+    document.getElementById('depositCryptoAmount').textContent = formatCrypto(totalCrypto, ASSET_LABEL[cur] || cur);
     if (commissionRub > 0) {
         document.getElementById('depositCommissionRow').classList.remove('u-hidden');
         document.getElementById('depositCommissionValue').textContent = formatRub(commissionRub);
@@ -237,6 +251,7 @@ async function generateDepositAddress() {
             expectedAmountCrypto: data.expectedAmountCrypto,
             commissionRub: data.commissionRub || 0,
             address: data.address,
+            payUrl: data.payUrl || null,
             createdAt: Date.now(),
             expiresInMinutes: data.expiresInMinutes || DEPOSIT_EXPIRY_MINUTES,
             status: 'pending',
@@ -256,8 +271,21 @@ function renderPendingUI() {
     document.getElementById('depositAmount').disabled = true;
     document.querySelectorAll('.deposit-crypto-btn').forEach((b) => { b.disabled = true; });
 
-    document.getElementById('depositAddress').textContent = currentDeposit.address;
-    document.getElementById('depositCryptoAmount').textContent = formatCrypto(currentDeposit.expectedAmountCrypto, currentDeposit.uiCurrency);
+    const isInvoice = INVOICE_BASED.has(currentDeposit.apiCurrency);
+    const addressRow = document.getElementById('depositAddress').closest('.address-row');
+    const payLinkRow = document.getElementById('depositPayLinkRow');
+
+    if (isInvoice) {
+        addressRow.classList.add('u-hidden');
+        payLinkRow.classList.remove('u-hidden');
+        document.getElementById('depositPayLinkBtn').onclick = () => tg.openLink(currentDeposit.payUrl);
+    } else {
+        addressRow.classList.remove('u-hidden');
+        payLinkRow.classList.add('u-hidden');
+        document.getElementById('depositAddress').textContent = currentDeposit.address;
+    }
+
+    document.getElementById('depositCryptoAmount').textContent = formatCrypto(currentDeposit.expectedAmountCrypto, ASSET_LABEL[currentDeposit.uiCurrency] || currentDeposit.uiCurrency);
 
     if (currentDeposit.commissionRub > 0) {
         document.getElementById('depositCommissionRow').classList.remove('u-hidden');
