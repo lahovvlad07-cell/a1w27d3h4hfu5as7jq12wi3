@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NeonKey</title>
+
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/overlays.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/shop.css">
+    <link rel="stylesheet" href="css/info.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/modals.css">
+
+    <!-- defer: не блокируют парсинг HTML, но выполняются по порядку до
+         DOMContentLoaded — то есть до модуля main.js, которому нужен
+         глобальный `supabase` и (не обязательно) `Telegram.WebApp». -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+</head>
+<body>
+    <!-- ===== ЭКРАН ЗАГРУЗКИ ===== -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-logo">NeonKey</div>
+        </div>
+    </div>
+
+    <!-- ===== ТОСТ-УВЕДОМЛЕНИЯ ===== -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- ===== АВТОРИЗАЦИЯ: ВХОД / РЕГИСТРАЦИЯ / КОД ПОДТВЕРЖДЕНИЯ =====
+         Единственный способ входа теперь — email + пароль, с кодом
+         подтверждения на почту при регистрации (Supabase Auth). -->
+    <div id="authOverlay" class="auth-overlay hidden">
+        <div class="auth-box">
+            <!-- ВХОД -->
+            <div id="authStepLogin" class="auth-step">
+                <div class="consent-icon">🔐</div>
+                <h2>Вход в NeonKey</h2>
+                <form id="authLoginForm">
+                    <label class="field-label">Email</label>
+                    <input type="email" id="authLoginEmail" class="field-input" autocomplete="email" required>
+                    <label class="field-label">Пароль</label>
+                    <input type="password" id="authLoginPassword" class="field-input" autocomplete="current-password" required>
+                    <div class="field-error" id="authLoginError"></div>
+                    <button type="submit" id="authLoginSubmit" class="btn-neon btn-full">Войти</button>
+                </form>
+                <p class="auth-switch">
+                    Нет аккаунта? <a href="#" id="authGoRegister">Зарегистрироваться</a><br>
+                    <a href="#" id="authForgotPassword" class="text-muted-sm">Забыли пароль?</a>
+                </p>
+            </div>
+
+            <!-- РЕГИСТРАЦИЯ -->
+            <div id="authStepRegister" class="auth-step u-hidden">
+                <div class="consent-icon">📋</div>
+                <h2>Регистрация</h2>
+                <form id="authRegisterForm">
+                    <label class="field-label">Email</label>
+                    <input type="email" id="authRegEmail" class="field-input" autocomplete="email" required>
+                    <label class="field-label">Пароль</label>
+                    <input type="password" id="authRegPassword" class="field-input" autocomplete="new-password" required>
+                    <label class="field-label">Повторите пароль</label>
+                    <input type="password" id="authRegPassword2" class="field-input" autocomplete="new-password" required>
+                    <div class="consent-check">
+                        <input type="checkbox" id="authRegConsent">
+                        <label for="authRegConsent">Я принимаю условия <button type="button" class="doc-link doc-link-text" data-doc="privacy">Политики конфиденциальности</button> и <button type="button" class="doc-link doc-link-text" data-doc="offer">Публичной оферты</button></label>
+                    </div>
+                    <div class="field-error" id="authRegisterError"></div>
+                    <button type="submit" id="authRegisterSubmit" class="btn-neon btn-full">Зарегистрироваться</button>
+                </form>
+                <p class="auth-switch">Уже есть аккаунт? <a href="#" id="authGoLogin">Войти</a></p>
+            </div>
+
+            <!-- КОД ПОДТВЕРЖДЕНИЯ -->
+            <div id="authStepVerify" class="auth-step u-hidden">
+                <div class="consent-icon">✉️</div>
+                <h2>Подтверждение email</h2>
+                <p>Мы отправили код на <strong id="authVerifyEmailLabel"></strong>. Введите его ниже.</p>
+                <form id="authVerifyForm">
+                    <input type="text" id="authVerifyCode" class="field-input" inputmode="numeric" autocomplete="one-time-code" placeholder="Код из письма" required>
+                    <div class="field-error" id="authVerifyError"></div>
+                    <button type="submit" id="authVerifySubmit" class="btn-neon btn-full">Подтвердить</button>
+                </form>
+                <p class="auth-switch">
+                    <a href="#" id="authResendCode">Отправить код ещё раз</a><br>
+                    <a href="#" id="authBackFromVerify" class="text-muted-sm">Назад</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ДЛЯ ДОКУМЕНТОВ ===== -->
+    <div id="docModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="docModalTitle">Документ</span>
+                <button class="modal-close" id="docModalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="docModalBody"></div>
+        </div>
+    </div>
+    <div id="docModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ПРИВЕТСТВИЯ ===== -->
+    <div id="welcomeModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🎉 Добро пожаловать в NeonKey!</span>
+            </div>
+            <div class="modal-body">
+                <p>NeonKey — каталог цифровых товаров (Steam, Telegram Stars и др.), оплата которых проходит через нашего партнёра Digiseller / plati.market.</p>
+                <p>🎮 Пополнение Steam</p>
+                <p>⭐ Telegram Stars</p>
+                <p>⚡ Оплата и доставка — на стороне Digiseller, обычно автоматически</p>
+                <p class="text-muted mt-md">Теперь выберите аватар, чтобы завершить настройку профиля.</p>
+                <button id="welcomeContinueBtn" class="btn-neon btn-full">Продолжить</button>
+            </div>
+        </div>
+    </div>
+    <div id="welcomeModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== ОКНО ОПЛАТЫ DIGISELLER ===== -->
+    <div id="digisellerModal" class="modal digiseller-modal hidden">
+        <div class="modal-content digiseller-modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="digisellerModalTitle">Оплата</span>
+                <button class="modal-close" id="digisellerModalClose">&times;</button>
+            </div>
+            <div class="digiseller-toolbar">
+                <button id="digisellerOpenNewTab" class="btn-neon btn-outline">🔗 Открыть в новой вкладке</button>
+            </div>
+            <div class="digiseller-frame-wrap">
+                <iframe id="digisellerFrame" title="Оплата товара" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+    <div id="digisellerModalOverlay" class="modal-overlay hidden"></div>
+
+    <!-- ===== ОСНОВНОЙ КОНТЕЙНЕР ===== -->
+    <div id="app" style="display:none">
+        <!-- Вкладка Профиль -->
+        <div id="page-profile" class="page active">
+            <div class="profile-header">
+                <div class="avatar-wrapper" id="avatarWrapper">
+                    <div class="avatar" id="userAvatar">👤</div>
+                </div>
+                <div class="user-name" id="userEmail">—</div>
+                <div class="user-id" id="userSince"></div>
+            </div>
+
+            <div class="account-card">
+                <p>Историю своих покупок, статус доставки и обращения по заказам смотрите в личном кабинете Digiseller / plati.market — именно там проходит оплата и выдача товара.</p>
+            </div>
+
+            <button id="signOutBtn" class="btn-neon btn-full btn-outline mt-md">Выйти из аккаунта</button>
+        </div>
+
+        <!-- Вкладка Каталог -->
+        <div id="page-shop" class="page">
+            <div class="shop-header">
+                <h2>🛒 Каталог</h2>
+                <p class="shop-subtitle">Оплата — через Digiseller / plati.market</p>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+
+        <!-- Вкладка Информация -->
+        <div id="page-info" class="page">
+            <div class="info-tabs">
+                <button class="info-tab active" data-tab="about">О проекте</button>
+                <button class="info-tab" data-tab="faq">FAQ</button>
+                <button class="info-tab" data-tab="privacy">Политика</button>
+                <button class="info-tab" data-tab="offer">Оферта</button>
+            </div>
+            <div class="info-content">
+                <div id="info-about" class="info-panel active">
+                    <h2>🚀 О проекте NeonKey</h2>
+                    <p>NeonKey — каталог цифровых товаров (пополнение Steam, Telegram Stars и другие). Мы — официальный партнёр торговой площадки <strong>Digiseller (plati.market)</strong>.</p>
+                    <p>🔹 Вы выбираете товар в нашем каталоге и переходите к оплате — оплата и выдача товара проходят через Digiseller, это надёжная и проверенная площадка с многолетней историей.</p>
+                    <p>🔹 Доставка большинства товаров — автоматическая, сразу после оплаты.</p>
+                    <p>🔹 Промокоды и скидки на товары вводятся прямо на странице оплаты.</p>
+                    <p>📢 Следите за новостями в нашем <a href="#" class="channel-link">Telegram-канале</a>. Вопросы — в <a href="#" class="support-link">поддержку</a>.</p>
+                    <p class="version">Версия 2.0.0 · © 2026 NeonKey</p>
+                </div>
+                <div id="info-faq" class="info-panel">
+                    <h2>❓ Частые вопросы</h2>
+                    <p><strong>Кто принимает оплату?</strong><br>Оплату принимает и обрабатывает Digiseller (plati.market) — мы выступаем партнёром этой площадки и предоставляем удобный каталог для перехода к оплате конкретного товара.</p>
+                    <p><strong>Как быстро приходит товар?</strong><br>В большинстве случаев — автоматически, сразу после подтверждения оплаты. Точный статус заказа виден в личном кабинете Digiseller.</p>
+                    <p><strong>Куда делся баланс сайта?</strong><br>Мы отказались от внутреннего баланса и пополнений — теперь каждая покупка оплачивается напрямую, без промежуточного счёта. Это быстрее и прозрачнее.</p>
+                    <p><strong>Что делать, если оплата прошла, а товара нет?</strong><br>Обратитесь в поддержку Digiseller через личный кабинет покупателя — именно там хранится информация о вашем платеже. По общим вопросам о каталоге также можно написать в <a href="#" class="support-link">нашу поддержку</a>.</p>
+                    <p><strong>Можно ли использовать промокод?</strong><br>Да, промокоды и скидки применяются на странице оплаты Digiseller.</p>
+                </div>
+                <div id="info-privacy" class="info-panel"></div>
+                <div id="info-offer" class="info-panel"></div>
+            </div>
+        </div>
+
+        <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+        <div class="bottom-nav" id="bottomNav">
+            <div class="nav-item active" data-tab="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Профиль</span>
+            </div>
+            <div class="nav-item" data-tab="shop">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Каталог</span>
+            </div>
+            <div class="nav-item" data-tab="info">
+                <span class="nav-icon">ℹ️</span>
+                <span class="nav-label">Информация</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ВЫБОРА АВАТАРА ===== -->
+    <div id="avatarModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Выберите аватар</span>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-grid" id="avatarGrid"></div>
+                <button id="avatarConfirmBtn" class="btn-neon">Продолжить</button>
+                <p class="modal-hint">Нажмите на эмодзи, чтобы выбрать аватар, затем нажмите «Продолжить».</p>
+            </div>
+        </div>
+    </div>
+    <div id="modalOverlay" class="modal-overlay hidden"></div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
