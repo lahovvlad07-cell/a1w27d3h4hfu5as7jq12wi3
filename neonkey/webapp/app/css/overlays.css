@@ -1,0 +1,234 @@
+/* ===== ЭКРАН ЗАГРУЗКИ ===== */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0e1a;
+    background-image:
+        radial-gradient(ellipse at 20% 40%, rgba(0, 180, 255, 0.25) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 70%, rgba(255, 200, 0, 0.20) 0%, transparent 45%),
+        linear-gradient(145deg, #0b1120 0%, #162040 60%, #0f1a2e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10010;
+    transition: opacity 0.35s ease;
+}
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+.loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+.loading-spinner {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 215, 0, 0.15);
+    border-top-color: #ffd700;
+    border-right-color: #00d4ff;
+    animation: loadingSpin 0.9s linear infinite;
+}
+@keyframes loadingSpin {
+    to { transform: rotate(360deg); }
+}
+.loading-logo {
+    color: #ffd700;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.35);
+}
+
+/* ===== ТОСТ-УВЕДОМЛЕНИЯ ===== */
+.toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(17, 27, 46, 0.97);
+    border: 1px solid rgba(0, 255, 136, 0.4);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10005;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    max-width: 90%;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.toast.hidden {
+    display: none;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.toast.success { border-color: rgba(0, 255, 136, 0.5); }
+.toast.success .toast-icon { color: #00ff88; }
+.toast.error { border-color: rgba(255, 68, 68, 0.5); }
+.toast.error .toast-icon { color: #ff4444; }
+.toast.info { border-color: rgba(0, 212, 255, 0.5); }
+.toast.info .toast-icon { color: #00d4ff; }
+
+/* ===== АВТОРИЗАЦИЯ: ВХОД / РЕГИСТРАЦИЯ / КОД ПОДТВЕРЖДЕНИЯ =====
+   Один общий экран вместо двух разных (раньше был отдельный
+   "Требуется авторизация" только для Telegram, и отдельное согласие с
+   политиками) — теперь это один и тот же email+пароль флоу что на
+   сайте, что в Telegram Mini App. */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 14, 26, 0.98);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+    padding: 20px;
+    overflow-y: auto;
+}
+.auth-overlay.hidden {
+    display: none;
+}
+.auth-box {
+    background: rgba(17, 27, 46, 0.95);
+    padding: 30px 24px;
+    border-radius: 24px;
+    max-width: 400px;
+    width: 100%;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.1);
+    text-align: center;
+}
+.auth-step .consent-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+.auth-step h2 {
+    color: #ffd700;
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+.auth-step p {
+    color: #aabbdd;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+.auth-step .field-label {
+    display: block;
+    text-align: left;
+    margin-top: 8px;
+}
+.auth-step .field-input {
+    text-align: left;
+}
+.auth-switch {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #8899bb;
+    line-height: 1.8;
+}
+.auth-switch a {
+    color: #00d4ff;
+    text-decoration: none;
+    border-bottom: 1px dashed #00d4ff;
+    cursor: pointer;
+}
+
+/* ===== РАЗДЕЛИТЕЛЬ "ИЛИ" + КНОПКА TELEGRAM ===== */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 12px;
+    color: #556080;
+    font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+.telegram-login-widget {
+    display: flex;
+    justify-content: center;
+    min-height: 40px;
+}
+
+/* Ссылки на документы, встроенные прямо в текст (галочка согласия) */
+.doc-link.doc-link-text {
+    display: inline;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #00d4ff;
+    text-decoration: none;
+    border-bottom: 1px dashed #00d4ff;
+    font-size: inherit;
+    font-weight: inherit;
+}
+.doc-link.doc-link-text:hover {
+    transform: none;
+    background: none;
+}
+
+/* Отдельный "доковый" стиль ссылок-кнопок (используется в других местах) */
+.doc-link {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: #00d4ff;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    background: transparent;
+    font-weight: 500;
+}
+.doc-link:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: #00d4ff;
+    transform: scale(1.02);
+}
+
+.consent-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    margin: 14px 0 4px;
+}
+.consent-check input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: #ffd700;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.consent-check label {
+    color: #c0d0e0;
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: pointer;
+}
