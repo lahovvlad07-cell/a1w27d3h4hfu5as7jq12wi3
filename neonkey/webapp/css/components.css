@@ -158,63 +158,76 @@
 #checkoutFrame { width: 100%; height: 100%; border: none; }
 
 /* ---------- Модалка оформления покупки (сумма + чипы + разбивка цены) ---------- */
-.buy-modal { width: 92%; max-width: 420px; max-height: 88vh; }
-.buy-modal-body { display: flex; flex-direction: column; gap: var(--sp-5); }
+.buy-modal { width: 92%; max-width: 400px; max-height: 88vh; }
+.buy-modal-body { display: flex; flex-direction: column; gap: var(--sp-4); }
 
-.buy-modal-head { display: flex; align-items: center; gap: var(--sp-3); }
+.buy-modal-head { display: flex; align-items: flex-start; gap: var(--sp-3); }
 .buy-modal-icon {
-  width: 44px; height: 44px; flex-shrink: 0; border-radius: 13px;
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(52, 217, 255, 0.08);
   border: 1px solid var(--border-cyan);
 }
-.buy-modal-icon svg { width: 22px; height: 22px; }
-.buy-modal-desc { margin: 0; color: var(--text-muted); font-size: var(--fs-small); line-height: 1.5; }
+.buy-modal-icon svg { width: 20px; height: 20px; }
+.buy-modal-body .buy-modal-desc { margin: 4px 0 0; color: var(--text-muted); font-size: var(--fs-small); line-height: 1.5; }
 
-/* Крупное поле суммы — как в обычном платёжном чекауте */
-.buy-amount { display: flex; flex-direction: column; gap: var(--sp-2); }
+/* Поле суммы — компактное, как в обычном платёжном чекауте */
+.buy-amount { display: flex; flex-direction: column; gap: 10px; }
 .buy-amount-label { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
 .buy-amount-row {
-  display: flex; align-items: baseline; gap: 8px;
-  padding: var(--sp-4) var(--sp-4);
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  transition: border-color var(--dur-fast) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
-.buy-amount-row:focus-within { border-color: var(--accent-cyan); }
+.buy-amount-row:focus-within { border-color: var(--accent-cyan); background: rgba(52, 217, 255, 0.04); }
 .buy-amount-input {
   flex: 1; min-width: 0;
   background: none; border: none; outline: none;
-  font-family: var(--font-mono); font-weight: 700; font-size: 1.7rem;
+  font-family: var(--font-mono); font-weight: 700; font-size: 1.15rem;
   color: var(--text-primary);
 }
 .buy-amount-input::-webkit-outer-spin-button, .buy-amount-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .buy-amount-input[type="number"] { -moz-appearance: textfield; }
-.buy-amount-suffix { font-family: var(--font-mono); font-weight: 600; font-size: 1.1rem; color: var(--text-faint); }
+.buy-amount-suffix { font-family: var(--font-mono); font-weight: 600; font-size: 0.92rem; color: var(--text-faint); }
 .buy-qty-hint { margin: 0; font-size: var(--fs-micro); color: var(--text-faint); }
 
-.buy-quick-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.buy-quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .quick-chip {
-  padding: 7px 13px;
+  padding: 6px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-secondary);
-  font-family: var(--font-mono); font-size: var(--fs-small); font-weight: 600;
+  font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
   transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 .quick-chip:hover { border-color: var(--border-cyan); color: var(--accent-cyan); }
 .quick-chip.is-active { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(52, 217, 255, 0.1); }
 
-.buy-breakdown { display: flex; flex-direction: column; gap: 8px; padding-top: var(--sp-2); border-top: 1px solid var(--border-subtle); }
+/* Разбивка цены — отдельная панель, чтобы визуально читалась как чек */
+.buy-breakdown {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
 .buy-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--fs-small); color: var(--text-muted); }
-.buy-row--total { padding-top: 10px; margin-top: 2px; border-top: 1px dashed var(--border-subtle); font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); font-size: 1.05rem; }
+.buy-row--total {
+  margin-top: 4px; padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+  font-family: var(--font-mono); font-weight: 700; font-size: 1rem; color: var(--text-primary);
+}
+.buy-row--total span:last-child { color: var(--accent-cyan); }
 
+.buy-methods { padding-top: var(--sp-1); }
 .buy-methods-label { display: block; font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); margin-bottom: var(--sp-2); }
 .buy-methods-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 .method-chip {
-  padding: 8px 14px;
+  padding: 7px 13px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
   background: rgba(255, 255, 255, 0.03);
@@ -223,7 +236,7 @@
   transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 .method-chip.is-active { border-color: var(--border-cyan); color: var(--accent-cyan); background: rgba(52, 217, 255, 0.08); }
-.buy-methods-note { margin: var(--sp-3) 0 0; font-size: var(--fs-micro); color: var(--text-faint); line-height: 1.5; }
+.buy-methods-note { margin: var(--sp-2) 0 0; font-size: var(--fs-micro); color: var(--text-faint); line-height: 1.5; }
 
 /* ---------- Модалка входа ---------- */
 .auth-modal { width: 92%; max-width: 380px; }
