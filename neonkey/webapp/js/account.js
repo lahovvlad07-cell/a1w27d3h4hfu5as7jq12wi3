@@ -11,6 +11,7 @@ import { renderCatalog, initCatalogButtons } from './ui/catalogView.js';
 import { initCheckoutModal } from './ui/checkoutModal.js';
 import { initAuthModal } from './ui/authModal.js';
 import { initAvatarPicker } from './ui/avatarPicker.js';
+import { initTelegramLinkModal } from './ui/telegramLinkModal.js';
 import { initProfilePage } from './ui/profilePage.js';
 import { initInfoTabs } from './ui/infoTabs.js';
 import { showToast } from './ui/toast.js';
@@ -52,8 +53,21 @@ function initAccountContent() {
     initCatalogButtons(checkoutModal);
 
     const avatarPicker = initAvatarPicker({ onSaved: () => profilePage.render() });
+    const telegramLinkModal = initTelegramLinkModal({
+        onLinked: async () => {
+            // Привязка обновляет user_metadata на сервере через service_role —
+            // локальная сессия об этом не узнает сама, поэтому запрашиваем
+            // свежего пользователя, прежде чем перерисовать профиль.
+            if (supabaseClient) {
+                const { data } = await supabaseClient.auth.getUser();
+                if (data?.user) state.user = data.user;
+            }
+            profilePage.render();
+        },
+    });
     const profilePage = initProfilePage({
         avatarPicker,
+        telegramLinkModal,
         onSignedOut: () => {
             state.user = null;
             showGate();

@@ -9,7 +9,7 @@
 //  2. Задеплоить supabase/functions/telegram-auth, прописать секрет
 //     BOT_TOKEN в настройках функции.
 //  3. Проверить BOT_USERNAME в js/config.js.
-import { BOT_USERNAME, SUPABASE_ANON_KEY, TELEGRAM_AUTH_FUNCTION_URL } from '../config.js';
+import { BOT_USERNAME, SUPABASE_ANON_KEY, TELEGRAM_AUTH_FUNCTION_URL, TELEGRAM_LINK_FUNCTION_URL } from '../config.js';
 import { supabaseClient } from './supabaseClient.js';
 
 /** Рисует официальный Telegram Login Widget внутрь контейнера с данным id.
@@ -59,5 +59,32 @@ export async function signInWithTelegram(telegramUser) {
         return { data, error: null };
     } catch (e) {
         return { error: 'Не удалось связаться с сервером входа через Telegram' };
+    }
+}
+
+/** Привязывает Telegram к уже открытому аккаунту (например, вошедшему по
+ *  email) — используется кнопкой "Привязать" в профиле. Вызывает Edge
+ *  Function telegram-link с access_token текущей сессии в заголовке. */
+export async function linkTelegramAccount(telegramUser) {
+    if (!supabaseClient) return { error: 'Supabase клиент не инициализирован' };
+    try {
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        const accessToken = sessionData?.session?.access_token;
+        if (!accessToken) return { error: 'Нет активной сессии' };
+
+        const res = await fetch(TELEGRAM_LINK_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(telegramUser),
+        });
+        const payload = await res.json();
+        if (!res.ok) return { error: payload?.error || 'Не удалось привязать Telegram' };
+        return { error: null };
+    } catch (e) {
+        return { error: 'Не удалось связаться с сервером привязки Telegram' };
     }
 }

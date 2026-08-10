@@ -13,12 +13,13 @@ function formatDate(iso) {
     } catch { return ''; }
 }
 
-export function initProfilePage({ avatarPicker, onSignedOut }) {
+export function initProfilePage({ avatarPicker, telegramLinkModal, onSignedOut }) {
     const avatarBtn = document.getElementById('profileAvatarBig');
     const nameEl = document.getElementById('profileNameBig');
     const metaEl = document.getElementById('profileMetaBig');
     const emailStatus = document.getElementById('linkedEmailStatus');
     const tgStatus = document.getElementById('linkedTelegramStatus');
+    const linkTelegramBtn = document.getElementById('linkTelegramBtn');
     const ordersEl = document.getElementById('orderHistoryList');
     const ordersEmpty = document.getElementById('orderHistoryEmpty');
     const signOutBtn = document.getElementById('signOutBtn');
@@ -37,6 +38,7 @@ export function initProfilePage({ avatarPicker, onSignedOut }) {
         emailStatus.className = `link-row-status ${user.email ? 'is-linked' : 'is-empty'}`;
         tgStatus.textContent = hasTelegram ? `@${user.user_metadata?.telegram_username || 'привязан'}` : 'не привязан';
         tgStatus.className = `link-row-status ${hasTelegram ? 'is-linked' : 'is-empty'}`;
+        if (linkTelegramBtn) linkTelegramBtn.classList.toggle('hidden', hasTelegram);
         void hasEmail;
 
         const orders = getOrderHistory();
@@ -55,6 +57,7 @@ export function initProfilePage({ avatarPicker, onSignedOut }) {
     }
 
     avatarBtn.addEventListener('click', () => avatarPicker.open());
+    linkTelegramBtn?.addEventListener('click', () => telegramLinkModal?.open());
     signOutBtn.addEventListener('click', async () => {
         await signOut();
         onSignedOut?.();

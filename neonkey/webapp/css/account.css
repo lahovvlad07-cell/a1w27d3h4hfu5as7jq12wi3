@@ -93,6 +93,17 @@
 .link-row-status { font-family: var(--font-mono); font-size: var(--fs-micro); }
 .link-row-status.is-linked { color: var(--accent-cyan); }
 .link-row-status.is-empty { color: var(--text-faint); }
+.link-row-right { display: flex; align-items: center; gap: var(--sp-3); }
+.link-row-action {
+  font-family: var(--font-mono); font-size: var(--fs-micro); font-weight: 700;
+  color: var(--accent-cyan);
+  background: rgba(52, 217, 255, 0.08);
+  border: 1px solid var(--border-cyan);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.link-row-action:hover { background: rgba(52, 217, 255, 0.18); transform: translateY(-1px); }
 
 .order-history-list { display: flex; flex-direction: column; gap: 8px; }
 .order-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--fs-small); color: var(--text-secondary); padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }

@@ -69,7 +69,7 @@
             <section id="panel-catalog" class="account-panel is-active">
                 <div class="section-head">
                     <h2>Каталог</h2>
-                    <p class="section-sub">Оплата открывается прямо здесь, во встроенном окне.</p>
+                    <p class="section-sub">Выберите количество или сумму — оплата откроется прямо здесь либо в Telegram-боте.</p>
                 </div>
                 <div class="catalog-grid" id="shopGrid"></div>
             </section>
@@ -95,7 +95,10 @@
                     </div>
                     <div class="link-row">
                         <span class="link-row-label">✈️ Telegram</span>
-                        <span class="link-row-status is-empty" id="linkedTelegramStatus">—</span>
+                        <span class="link-row-right">
+                            <span class="link-row-status is-empty" id="linkedTelegramStatus">—</span>
+                            <button type="button" id="linkTelegramBtn" class="link-row-action hidden">Привязать</button>
+                        </span>
                     </div>
                 </div>
 
@@ -187,6 +190,19 @@
     <div class="modal-body">
         <div class="avatar-grid" id="avatarGrid"></div>
         <button id="avatarConfirmBtn" class="btn btn-brand btn-block">Сохранить</button>
+    </div>
+</div>
+
+<!-- ===== МОДАЛКА «ПРИВЯЗАТЬ TELEGRAM» (для тех, кто вошёл по email) ===== -->
+<div id="tgLinkModalOverlay" class="modal-overlay hidden"></div>
+<div id="tgLinkModal" class="auth-modal hidden" style="max-width: 360px;">
+    <div class="modal-header">
+        <span class="modal-title">Привязать Telegram</span>
+        <button class="modal-close" id="tgLinkModalClose" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p class="auth-tg-note">Подтвердите через Telegram — это тот же аккаунт, просто добавится второй способ входа.</p>
+        <div id="tgLinkWidget" class="login-widget-slot"></div>
     </div>
 </div>
 
