@@ -9,6 +9,7 @@ import { supabaseClient } from './lib/supabaseClient.js';
 import { state } from './state.js';
 import { renderCatalog, initCatalogButtons } from './ui/catalogView.js';
 import { initCheckoutModal } from './ui/checkoutModal.js';
+import { initBuyModal } from './ui/buyModal.js';
 import { initAuthModal } from './ui/authModal.js';
 import { initAvatarPicker } from './ui/avatarPicker.js';
 import { initTelegramLinkModal } from './ui/telegramLinkModal.js';
@@ -49,8 +50,9 @@ function initAccountContent() {
     contentInitialized = true;
 
     const checkoutModal = initCheckoutModal();
+    const buyModal = initBuyModal({ checkoutModal });
     renderCatalog();
-    initCatalogButtons(checkoutModal);
+    initCatalogButtons(buyModal);
 
     const avatarPicker = initAvatarPicker({ onSaved: () => profilePage.render() });
     const telegramLinkModal = initTelegramLinkModal({

@@ -12,7 +12,6 @@
 export function initPulseLine() {
     const svg = document.querySelector('.pulse-svg');
     const line = document.querySelector('.pulse-line');
-    const lineBg = document.querySelector('.pulse-line-bg');
     if (!svg || !line) return;
 
     const VB_W = 320;
@@ -63,7 +62,6 @@ export function initPulseLine() {
 
     const initialD = toPathD(initialPoints, 0);
     line.setAttribute('d', initialD);
-    if (lineBg) lineBg.setAttribute('d', initialD);
 
     // Длина конкретного пути не фиксирована (форма каждый раз своя),
     // поэтому dasharray/dashoffset для эффекта "рисования" считаем
