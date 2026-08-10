@@ -24,7 +24,7 @@
 // Для type: 'topup' дополнительно:
 //   feePercent, minAmount, maxAmount, step, defaultAmount, quickAmounts
 //
-// quickAmounts — 4-5 значений для чипов быстрого выбора суммы в модалке
+// quickAmounts — ровно 4 значения для чипов быстрого выбора суммы в модалке
 // покупки (см. ui/buyModal.js) — то, что обычно предлагают Steam/App Store.
 //
 // СИНХРОНИЗАЦИЯ С MINI APP: держи такой же список (или общий JSON) в
@@ -43,7 +43,7 @@ export const CATALOG = [
         maxAmount: 15000,
         step: 100,
         defaultAmount: 500,
-        quickAmounts: [300, 500, 1000, 2000, 5000],
+        quickAmounts: [300, 500, 1000, 2000],
         checkoutUrl: null, // TODO: вставь ссылку на оплату этого товара
         featured: true,
     },
@@ -60,7 +60,7 @@ export const CATALOG = [
         maxQty: 10000,
         step: 25,
         defaultQty: 50,
-        quickAmounts: [50, 100, 250, 500, 1000],
+        quickAmounts: [50, 100, 250, 500],
         checkoutUrl: null, // TODO: вставь ссылку на оплату этого товара
         featured: false,
     },

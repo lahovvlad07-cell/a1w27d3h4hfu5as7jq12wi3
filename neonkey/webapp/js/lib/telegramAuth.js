@@ -58,7 +58,7 @@ export async function signInWithTelegram(telegramUser) {
         if (error) return { error: error.message };
         return { data, error: null };
     } catch (e) {
-        return { error: 'Не удалось связаться с сервером входа через Telegram' };
+        return { error: 'сервер не отвечает — похоже, Edge Function telegram-auth ещё не задеплоена (см. README → «Вход через Telegram и привязка аккаунта»)' };
     }
 }
 
@@ -85,6 +85,6 @@ export async function linkTelegramAccount(telegramUser) {
         if (!res.ok) return { error: payload?.error || 'Не удалось привязать Telegram' };
         return { error: null };
     } catch (e) {
-        return { error: 'Не удалось связаться с сервером привязки Telegram' };
+        return { error: 'сервер не отвечает — похоже, Edge Function telegram-link ещё не задеплоена (см. README → «Вход через Telegram и привязка аккаунта»)' };
     }
 }

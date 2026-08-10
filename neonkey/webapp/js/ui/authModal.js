@@ -42,7 +42,7 @@ export function initAuthModal({ onAuthed }) {
             renderTelegramLoginWidget('authTelegramWidget', {
                 onAuth: async (telegramUser) => {
                     const { data, error } = await signInWithTelegram(telegramUser);
-                    if (error) { showToast(`Не удалось войти через Telegram: ${error}`, 'error'); return; }
+                    if (error) { showToast(`Не удалось войти через Telegram: ${error}`, 'error', 6000); return; }
                     close();
                     onAuthed?.(data.user);
                 },

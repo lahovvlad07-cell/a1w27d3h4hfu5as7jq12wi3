@@ -95,13 +95,15 @@
   position: fixed; left: 50%; bottom: 28px;
   transform: translate(-50%, 16px);
   opacity: 0; pointer-events: none;
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: flex-start; gap: 10px;
+  max-width: min(420px, calc(100vw - 32px));
   background: var(--bg-panel);
   border: 1px solid var(--border-strong);
   color: var(--text-primary);
   padding: 13px 20px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-small);
+  line-height: 1.5;
   z-index: 10001;
   box-shadow: var(--shadow-ambient);
   transition: opacity var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);
@@ -109,7 +111,7 @@
 .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
 .toast.error { border-color: rgba(255, 107, 122, 0.4); }
 .toast.success { border-color: var(--border-cyan); }
-.toast-icon { font-size: 1rem; line-height: 1; }
+.toast-icon { font-size: 1rem; line-height: 1.5; flex-shrink: 0; }
 
 /* ---------- Модалки (документы / вход / оформление покупки) ---------- */
 .modal-overlay {

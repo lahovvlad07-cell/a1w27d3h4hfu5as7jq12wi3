@@ -23,7 +23,7 @@ export function initTelegramLinkModal({ onLinked } = {}) {
         renderTelegramLoginWidget('tgLinkWidget', {
             onAuth: async (telegramUser) => {
                 const { error } = await linkTelegramAccount(telegramUser);
-                if (error) { showToast(`Не удалось привязать Telegram: ${error}`, 'error'); return; }
+                if (error) { showToast(`Не удалось привязать Telegram: ${error}`, 'error', 6000); return; }
                 close();
                 showToast('Telegram привязан к аккаунту', 'success');
                 onLinked?.();
