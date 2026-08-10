@@ -221,11 +221,12 @@
             <span class="buy-field-label" id="buyQtyLabel">Количество</span>
             <div class="product-qty">
                 <button type="button" class="qty-btn" id="buyQtyDec" aria-label="Уменьшить">−</button>
-                <span class="qty-value" id="buyQtyValue">50</span>
+                <input type="number" class="qty-input" id="buyQtyValue" inputmode="numeric" />
                 <button type="button" class="qty-btn" id="buyQtyInc" aria-label="Увеличить">+</button>
                 <span class="qty-suffix" id="buyQtySuffix">⭐</span>
             </div>
         </div>
+        <p class="buy-qty-hint" id="buyQtyHint"></p>
 
         <div class="buy-breakdown" id="buyBreakdown"></div>
 

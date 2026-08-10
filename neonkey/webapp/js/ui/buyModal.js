@@ -1,6 +1,7 @@
 // ===== МОДАЛКА ОФОРМЛЕНИЯ ПОКУПКИ =====
 // Открывается по кнопке «Купить» в каталоге (см. ui/catalogView.js). Даёт
-// выбрать количество/сумму, показывает разбивку цены и итог.
+// вписать количество/сумму вручную (или подкрутить стрелками), показывает
+// разбивку цены и итог.
 //
 // Сама оплата — ШАБЛОН, не реальная интеграция:
 //   - если у товара уже указан checkoutUrl (см. data/catalog.js) — модалка
@@ -28,6 +29,19 @@ function computeTotal(item, qty) {
     if (item.type === 'topup') return qty * (1 + item.feePercent / 100);
     return 0;
 }
+function clampQty(item, value) {
+    const min = minQty(item);
+    const max = maxQty(item);
+    if (!Number.isFinite(value)) return min;
+    return Math.min(max, Math.max(min, Math.round(value)));
+}
+function qtyHint(item) {
+    const min = minQty(item);
+    const max = maxQty(item);
+    return item.type === 'unit'
+        ? `От ${min} до ${max} звёзд`
+        : `От ${formatMoney(min)} до ${formatMoney(max)} ${item.currency}`;
+}
 
 export function initBuyModal({ checkoutModal } = {}) {
     const overlay = document.getElementById('buyModalOverlay');
@@ -39,6 +53,7 @@ export function initBuyModal({ checkoutModal } = {}) {
     const qtyLabelEl = document.getElementById('buyQtyLabel');
     const qtyValueEl = document.getElementById('buyQtyValue');
     const qtySuffixEl = document.getElementById('buyQtySuffix');
+    const qtyHintEl = document.getElementById('buyQtyHint');
     const qtyDecBtn = document.getElementById('buyQtyDec');
     const qtyIncBtn = document.getElementById('buyQtyInc');
     const breakdownEl = document.getElementById('buyBreakdown');
@@ -49,8 +64,11 @@ export function initBuyModal({ checkoutModal } = {}) {
     let qty = 0;
     let method = 'card';
 
-    function renderBreakdown() {
-        qtyValueEl.textContent = qty;
+    // syncInput=false — при вводе с клавиатуры не трогаем поле, чтобы не
+    // сбивать курсор и не мешать печатать; итог и разбивку всё равно
+    // пересчитываем по введённому (пусть даже промежуточному) числу.
+    function renderBreakdown(syncInput = true) {
+        if (syncInput) qtyValueEl.value = qty;
         const total = computeTotal(currentItem, qty);
 
         if (currentItem.type === 'unit') {
@@ -83,6 +101,10 @@ export function initBuyModal({ checkoutModal } = {}) {
         descEl.textContent = item.description;
         qtyLabelEl.textContent = item.type === 'unit' ? 'Количество' : 'Сумма пополнения';
         qtySuffixEl.textContent = item.type === 'unit' ? '⭐' : item.currency;
+        qtyHintEl.textContent = qtyHint(item);
+        qtyValueEl.min = minQty(item);
+        qtyValueEl.max = maxQty(item);
+        qtyValueEl.step = item.step;
 
         // Блок способов оплаты — это шаблон для будущей реальной оплаты,
         // поэтому показываем его только пока нет прямой ссылки на оплату.
@@ -104,13 +126,33 @@ export function initBuyModal({ checkoutModal } = {}) {
 
     qtyDecBtn.addEventListener('click', () => {
         if (!currentItem) return;
-        qty = Math.max(minQty(currentItem), qty - currentItem.step);
+        qty = clampQty(currentItem, qty - currentItem.step);
         renderBreakdown();
     });
     qtyIncBtn.addEventListener('click', () => {
         if (!currentItem) return;
-        qty = Math.min(maxQty(currentItem), qty + currentItem.step);
+        qty = clampQty(currentItem, qty + currentItem.step);
         renderBreakdown();
+    });
+
+    // Свободный ввод числа с клавиатуры — считаем разбивку сразу по мере
+    // печати, а к границам min/max подгоняем только при уходе с поля
+    // (иначе нельзя было бы стереть цифру и напечатать другую).
+    qtyValueEl.addEventListener('input', () => {
+        if (!currentItem) return;
+        const raw = Number(qtyValueEl.value);
+        if (qtyValueEl.value !== '' && Number.isFinite(raw)) {
+            qty = raw;
+            renderBreakdown(false);
+        }
+    });
+    qtyValueEl.addEventListener('blur', () => {
+        if (!currentItem) return;
+        qty = clampQty(currentItem, Number(qtyValueEl.value));
+        renderBreakdown();
+    });
+    qtyValueEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') qtyValueEl.blur();
     });
 
     methodsEl.addEventListener('click', (e) => {
@@ -122,6 +164,10 @@ export function initBuyModal({ checkoutModal } = {}) {
 
     confirmBtn.addEventListener('click', () => {
         if (!currentItem) return;
+        // На случай, если "Оплатить" нажали сразу после печати, не дожидаясь blur.
+        qty = clampQty(currentItem, Number(qtyValueEl.value));
+        renderBreakdown();
+
         const total = computeTotal(currentItem, qty);
         const priceLabel = `${formatMoney(total)} ${currentItem.currency}`;
 
