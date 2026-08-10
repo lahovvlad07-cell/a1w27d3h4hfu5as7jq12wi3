@@ -1,11 +1,12 @@
 // ===== МОДАЛКА ОФОРМЛЕНИЯ ПОКУПКИ =====
-// Открывается по кнопке «Купить» в каталоге (см. ui/catalogView.js). Даёт
-// вписать количество/сумму вручную (или подкрутить стрелками), показывает
-// разбивку цены и итог.
+// Открывается по кнопке «Купить» в каталоге (см. ui/catalogView.js).
+// Композиция как у обычного платёжного чекаута: крупное поле суммы с
+// чипами быстрого выбора (без +/- — набирать по одному клику на кнопку
+// неудобно, когда сумма может быть и 100, и 5000), разбивка цены и итог.
 //
 // Сама оплата — ШАБЛОН, не реальная интеграция:
 //   - если у товара уже указан checkoutUrl (см. data/catalog.js) — модалка
-//     передаёт эстафету дальше, во встроенное окно оплаты (checkoutModal),
+//     передаёт эстафету дальше, во встроенное окно оплаты (checkoutModal) —
 //     это уже реальный переход на страницу платёжной системы;
 //   - если checkoutUrl ещё нет (сейчас так у обоих товаров) — показывается
 //     блок «Способ оплаты» с чипами и кнопка «Оплатить», но по нажатию
@@ -14,6 +15,10 @@
 //     заказов»). Когда появится реальный платёжный провайдер, замени
 //     обработчик confirmBtn на настоящий вызов оплаты — вёрстка и разбивка
 //     цены уже готовы, менять надо только сам платёж.
+//
+// ПОРТИРОВАНИЕ В MINI APP: вся логика цены и валидации вынесена в чистые
+// функции без DOM (formatMoney/computeTotal/clampQty/qtyHint выше) — их
+// можно скопировать как есть в мини-апп и обвязать своей вёрсткой.
 import { PRODUCT_ICONS } from './catalogIcons.js';
 import { addOrderToHistory } from '../lib/orders.js';
 import { showToast } from './toast.js';
@@ -54,8 +59,7 @@ export function initBuyModal({ checkoutModal } = {}) {
     const qtyValueEl = document.getElementById('buyQtyValue');
     const qtySuffixEl = document.getElementById('buyQtySuffix');
     const qtyHintEl = document.getElementById('buyQtyHint');
-    const qtyDecBtn = document.getElementById('buyQtyDec');
-    const qtyIncBtn = document.getElementById('buyQtyInc');
+    const quickRowEl = document.getElementById('buyQuickRow');
     const breakdownEl = document.getElementById('buyBreakdown');
     const methodsEl = document.getElementById('buyMethods');
     const confirmBtn = document.getElementById('buyConfirmBtn');
@@ -64,11 +68,18 @@ export function initBuyModal({ checkoutModal } = {}) {
     let qty = 0;
     let method = 'card';
 
+    function setActiveQuickChip() {
+        quickRowEl.querySelectorAll('.quick-chip').forEach((chip) => {
+            chip.classList.toggle('is-active', Number(chip.dataset.value) === qty);
+        });
+    }
+
     // syncInput=false — при вводе с клавиатуры не трогаем поле, чтобы не
     // сбивать курсор и не мешать печатать; итог и разбивку всё равно
     // пересчитываем по введённому (пусть даже промежуточному) числу.
     function renderBreakdown(syncInput = true) {
         if (syncInput) qtyValueEl.value = qty;
+        setActiveQuickChip();
         const total = computeTotal(currentItem, qty);
 
         if (currentItem.type === 'unit') {
@@ -104,7 +115,10 @@ export function initBuyModal({ checkoutModal } = {}) {
         qtyHintEl.textContent = qtyHint(item);
         qtyValueEl.min = minQty(item);
         qtyValueEl.max = maxQty(item);
-        qtyValueEl.step = item.step;
+
+        quickRowEl.innerHTML = (item.quickAmounts || [])
+            .map((v) => `<button type="button" class="quick-chip" data-value="${v}">${v}${item.type === 'unit' ? ' ⭐' : ` ${item.currency}`}</button>`)
+            .join('');
 
         // Блок способов оплаты — это шаблон для будущей реальной оплаты,
         // поэтому показываем его только пока нет прямой ссылки на оплату.
@@ -124,14 +138,10 @@ export function initBuyModal({ checkoutModal } = {}) {
         setTimeout(() => { overlay.classList.add('hidden'); modal.classList.add('hidden'); }, 300);
     }
 
-    qtyDecBtn.addEventListener('click', () => {
-        if (!currentItem) return;
-        qty = clampQty(currentItem, qty - currentItem.step);
-        renderBreakdown();
-    });
-    qtyIncBtn.addEventListener('click', () => {
-        if (!currentItem) return;
-        qty = clampQty(currentItem, qty + currentItem.step);
+    quickRowEl.addEventListener('click', (e) => {
+        const chip = e.target.closest('.quick-chip');
+        if (!chip || !currentItem) return;
+        qty = clampQty(currentItem, Number(chip.dataset.value));
         renderBreakdown();
     });
 

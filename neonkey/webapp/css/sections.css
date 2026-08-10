@@ -128,36 +128,6 @@
 .product-name { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; color: var(--text-primary); }
 .product-desc { margin-top: 6px; font-size: var(--fs-small); color: var(--text-muted); line-height: 1.5; }
 
-/* ---------- Стрелки количества/суммы (карточка товара и модалка покупки) ---------- */
-.product-qty { display: flex; align-items: center; gap: var(--sp-2); }
-.qty-btn {
-  width: 26px; height: 26px; flex-shrink: 0;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  font-family: var(--font-mono); font-size: 15px; line-height: 1;
-  transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
-}
-.qty-btn:hover { border-color: var(--border-cyan); color: var(--accent-cyan); }
-.qty-value { min-width: 48px; text-align: center; font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-small); color: var(--text-primary); }
-.qty-suffix { font-size: var(--fs-micro); color: var(--text-faint); }
-.qty-input {
-  width: 68px; text-align: center;
-  font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-small);
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 5px 4px;
-  transition: border-color var(--dur-fast) var(--ease-out);
-}
-.qty-input:focus { border-color: var(--accent-cyan); outline: none; }
-.qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.qty-input[type="number"] { -moz-appearance: textfield; }
-.buy-qty-hint { margin: -6px 0 0; font-size: var(--fs-micro); color: var(--text-faint); }
-
 .product-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 .product-price { font-family: var(--font-mono); font-weight: 600; font-size: 0.92rem; color: var(--accent-cyan); }
 .btn-product {

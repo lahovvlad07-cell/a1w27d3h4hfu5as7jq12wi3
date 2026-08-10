@@ -206,7 +206,7 @@
     </div>
 </div>
 
-<!-- ===== МОДАЛКА ВЫБОРА КОЛИЧЕСТВА/СУММЫ + РАЗБИВКИ ЦЕНЫ (шаблон оплаты) ===== -->
+<!-- ===== МОДАЛКА ОФОРМЛЕНИЯ ПОКУПКИ (сумма + чипы + разбивка цены, шаблон оплаты) ===== -->
 <div id="buyModalOverlay" class="modal-overlay hidden"></div>
 <div id="buyModal" class="buy-modal hidden">
     <div class="modal-header">
@@ -214,19 +214,20 @@
         <button class="modal-close" id="buyModalClose" aria-label="Закрыть">&times;</button>
     </div>
     <div class="modal-body buy-modal-body">
-        <div class="buy-modal-icon" id="buyModalIcon"></div>
-        <p class="buy-modal-desc" id="buyModalDesc"></p>
-
-        <div class="buy-field">
-            <span class="buy-field-label" id="buyQtyLabel">Количество</span>
-            <div class="product-qty">
-                <button type="button" class="qty-btn" id="buyQtyDec" aria-label="Уменьшить">−</button>
-                <input type="number" class="qty-input" id="buyQtyValue" inputmode="numeric" />
-                <button type="button" class="qty-btn" id="buyQtyInc" aria-label="Увеличить">+</button>
-                <span class="qty-suffix" id="buyQtySuffix">⭐</span>
-            </div>
+        <div class="buy-modal-head">
+            <div class="buy-modal-icon" id="buyModalIcon"></div>
+            <p class="buy-modal-desc" id="buyModalDesc"></p>
         </div>
-        <p class="buy-qty-hint" id="buyQtyHint"></p>
+
+        <div class="buy-amount">
+            <span class="buy-amount-label" id="buyQtyLabel">Сумма пополнения</span>
+            <div class="buy-amount-row">
+                <input type="number" class="buy-amount-input" id="buyQtyValue" inputmode="numeric" />
+                <span class="buy-amount-suffix" id="buyQtySuffix">₽</span>
+            </div>
+            <p class="buy-qty-hint" id="buyQtyHint"></p>
+            <div class="buy-quick-row" id="buyQuickRow"></div>
+        </div>
 
         <div class="buy-breakdown" id="buyBreakdown"></div>
 

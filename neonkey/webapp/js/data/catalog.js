@@ -20,9 +20,12 @@
 //                  как только ссылка появится, оплата откроется прямо на сайте.
 //
 // Для type: 'unit' дополнительно:
-//   pricePerUnit, minQty, maxQty, step, defaultQty
+//   pricePerUnit, minQty, maxQty, step, defaultQty, quickAmounts
 // Для type: 'topup' дополнительно:
-//   feePercent, minAmount, maxAmount, step, defaultAmount
+//   feePercent, minAmount, maxAmount, step, defaultAmount, quickAmounts
+//
+// quickAmounts — 4-5 значений для чипов быстрого выбора суммы в модалке
+// покупки (см. ui/buyModal.js) — то, что обычно предлагают Steam/App Store.
 //
 // СИНХРОНИЗАЦИЯ С MINI APP: держи такой же список (или общий JSON) в
 // проекте mini app — тогда каталог на сайте и в Telegram не разъедутся.
@@ -40,6 +43,7 @@ export const CATALOG = [
         maxAmount: 15000,
         step: 100,
         defaultAmount: 500,
+        quickAmounts: [300, 500, 1000, 2000, 5000],
         checkoutUrl: null, // TODO: вставь ссылку на оплату этого товара
         featured: true,
     },
@@ -56,6 +60,7 @@ export const CATALOG = [
         maxQty: 10000,
         step: 25,
         defaultQty: 50,
+        quickAmounts: [50, 100, 250, 500, 1000],
         checkoutUrl: null, // TODO: вставь ссылку на оплату этого товара
         featured: false,
     },
