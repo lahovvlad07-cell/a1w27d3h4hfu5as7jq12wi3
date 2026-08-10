@@ -26,7 +26,12 @@ except ImportError:
 DEFAULT_TOKEN = "8708842706:AAHi5Rdb8kPxKGXMu1Knavf1ilowUxtfsrM"
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", DEFAULT_TOKEN)
-# /app/ — это именно мини-апп (личный кабинет), landing-страница
-# (webapp/index.html) в Telegram не открывается, она для обычных
-# браузеров.
+
+# /app/ — это личный кабинет (профиль, способы входа, история заказов),
+# открывается КАК мини-апп прямо внутри Telegram.
 SHOP_URL = os.getenv("SHOP_URL", "https://neonkey.vercel.app/app/")
+
+# Обычная (не мини-апп) ссылка на сайт — каталог и оплата живут именно
+# здесь. Открывается через встроенный браузер Telegram/обычный браузер,
+# НЕ как мини-апп — так каталог физически не встраивается внутрь бота.
+SITE_URL = os.getenv("SITE_URL", "https://neonkey.vercel.app/")

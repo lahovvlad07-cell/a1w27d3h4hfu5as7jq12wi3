@@ -19,12 +19,16 @@ export const SHOP_NAME = 'NeonKey';
 
 // Юзернейм Telegram-бота (без @) — нужен для кнопки "Войти через
 // Telegram" на сайте (Telegram Login Widget) и для ссылки на мини-апп.
-export const BOT_USERNAME = 'neonkey_bot'; // TODO: замени на реальный юзернейм бота
+export const BOT_USERNAME = 'NeonKey_Bot';
 
 // URL Edge Function, которая проверяет вход через Telegram и создаёт/
-// находит аккаунт (см. supabase/functions/telegram-auth). Формат обычно
-// https://<project-ref>.functions.supabase.co/telegram-auth
-export const TELEGRAM_AUTH_FUNCTION_URL = 'https://jbqjvbccstjqaaqrjntx.functions.supabase.co/telegram-auth';
+// находит аккаунт (см. supabase/functions/telegram-auth). ВАЖНО: у
+// Supabase Edge Functions именно такой формат адреса —
+// https://<project-ref>.supabase.co/functions/v1/<имя-функции>
+// (НЕ <project-ref>.functions.supabase.co — такого домена не существует,
+// из-за этого раньше был "нет связи с сервером").
+export const TELEGRAM_AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
+export const TELEGRAM_LINK_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-link`;
 
 export const AVATAR_EMOJIS = [
     '🚀', '💎', '⚡', '🔥',

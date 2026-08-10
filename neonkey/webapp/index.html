@@ -28,7 +28,7 @@
                 <h1>Steam и <span>Telegram Stars</span><br>мгновенно, без переплат</h1>
                 <p>NeonKey — сервис для быстрой покупки цифровых товаров. Выбираете товар, оплачиваете — и почти всегда доставка происходит автоматически, сразу.</p>
                 <div class="hero-actions">
-                    <a href="/app/" class="btn btn-gold">🛒 Открыть каталог</a>
+                    <a href="#catalog" class="btn btn-gold">🛒 Открыть каталог</a>
                     <a id="heroTelegramLink" href="https://t.me/neonkey_bot" target="_blank" rel="noopener" class="btn btn-outline">✈️ Открыть в Telegram</a>
                 </div>
                 <div class="hero-note">Работает и как обычный сайт, и как приложение внутри Telegram — аккаунт один и тот же.</div>
@@ -62,26 +62,11 @@
             </div>
         </section>
 
-        <!-- ===== ПРЕВЬЮ КАТАЛОГА ===== -->
+        <!-- ===== КАТАЛОГ ===== -->
         <section class="catalog-preview" id="catalog">
             <div class="section-title">Каталог</div>
-            <div class="section-subtitle">Полный каталог и оформление заказа — в личном кабинете.</div>
-            <div class="preview-grid">
-                <div class="preview-card">
-                    <span class="p-icon">🎮</span>
-                    <div>
-                        <div class="p-name">Пополнение Steam</div>
-                        <div class="p-price">от 100 ₽</div>
-                    </div>
-                </div>
-                <div class="preview-card">
-                    <span class="p-icon">⭐</span>
-                    <div>
-                        <div class="p-name">Telegram Stars</div>
-                        <div class="p-price">от 50 ⭐</div>
-                    </div>
-                </div>
-            </div>
+            <div class="section-subtitle">Выберите товар — оплата открывается сразу здесь, без перехода на другой сайт.</div>
+            <div class="shop-grid" id="shopGrid"></div>
         </section>
 
         <!-- ===== FOOTER ===== -->
@@ -106,6 +91,23 @@
     </div>
 
     <div id="toast" class="toast hidden"></div>
+
+    <!-- ===== ОКНО ОФОРМЛЕНИЯ ПОКУПКИ ===== -->
+    <div id="checkoutModal" class="modal checkout-modal hidden">
+        <div class="modal-content checkout-modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="checkoutModalTitle">Оформление покупки</span>
+                <button class="modal-close" id="checkoutModalClose">&times;</button>
+            </div>
+            <div class="checkout-toolbar">
+                <button id="checkoutOpenNewTab" class="btn btn-outline btn-sm">🔗 Открыть в новой вкладке</button>
+            </div>
+            <div class="checkout-frame-wrap">
+                <iframe id="checkoutFrame" title="Оформление покупки" loading="lazy"></iframe>
+            </div>
+        </div>
+    </div>
+    <div id="checkoutModalOverlay" class="modal-overlay hidden"></div>
 
     <script type="module" src="js/landing.js"></script>
 </body>

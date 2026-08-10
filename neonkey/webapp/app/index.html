@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/overlays.css">
     <link rel="stylesheet" href="css/profile.css">
-    <link rel="stylesheet" href="css/shop.css">
     <link rel="stylesheet" href="css/info.css">
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/modals.css">
@@ -31,11 +30,11 @@
     <!-- ===== ТОСТ-УВЕДОМЛЕНИЯ ===== -->
     <div id="toast" class="toast hidden"></div>
 
-    <!-- ===== АВТОРИЗАЦИЯ: ВХОД / РЕГИСТРАЦИЯ / КОД ПОДТВЕРЖДЕНИЯ =====
-         Единственный способ входа теперь — email + пароль, с кодом
-         подтверждения на почту при регистрации (Supabase Auth). -->
+    <!-- ===== АВТОРИЗАЦИЯ: ВХОД / РЕГИСТРАЦИЯ =====
+         Единственные способы входа — email + пароль или Telegram. -->
     <div id="authOverlay" class="auth-overlay hidden">
         <div class="auth-box">
+            <a href="/" id="authBackToSite" class="auth-back-link u-hidden">← Вернуться на сайт</a>
             <!-- ВХОД -->
             <div id="authStepLogin" class="auth-step">
                 <div class="consent-icon">🔐</div>
@@ -75,6 +74,8 @@
                     <button type="submit" id="authRegisterSubmit" class="btn-neon btn-full">Зарегистрироваться</button>
                 </form>
                 <p class="auth-switch">Уже есть аккаунт? <a href="#" id="authGoLogin">Войти</a></p>
+                <div class="auth-divider"><span>или</span></div>
+                <div id="telegramRegisterWidget" class="telegram-login-widget"></div>
             </div>
         </div>
     </div>
@@ -108,23 +109,6 @@
         </div>
     </div>
     <div id="welcomeModalOverlay" class="modal-overlay hidden"></div>
-
-    <!-- ===== ОКНО ОПЛАТЫ ===== -->
-    <div id="checkoutModal" class="modal checkout-modal hidden">
-        <div class="modal-content checkout-modal-content">
-            <div class="modal-header">
-                <span class="modal-title" id="checkoutModalTitle">Оплата</span>
-                <button class="modal-close" id="checkoutModalClose">&times;</button>
-            </div>
-            <div class="checkout-toolbar">
-                <button id="checkoutOpenNewTab" class="btn-neon btn-outline">🔗 Открыть в новой вкладке</button>
-            </div>
-            <div class="checkout-frame-wrap">
-                <iframe id="checkoutFrame" title="Оплата товара" loading="lazy"></iframe>
-            </div>
-        </div>
-    </div>
-    <div id="checkoutModalOverlay" class="modal-overlay hidden"></div>
 
     <!-- ===== ОСНОВНОЙ КОНТЕЙНЕР ===== -->
     <div id="app" style="display:none">
@@ -167,15 +151,6 @@
             <button id="signOutBtn" class="btn-neon btn-full btn-outline mt-md">Выйти из аккаунта</button>
         </div>
 
-        <!-- Вкладка Каталог -->
-        <div id="page-shop" class="page">
-            <div class="shop-header">
-                <h2>🛒 Каталог</h2>
-                <p class="shop-subtitle">Мгновенная оплата и доставка</p>
-            </div>
-            <div class="shop-grid" id="shopGrid"></div>
-        </div>
-
         <!-- Вкладка Информация -->
         <div id="page-info" class="page">
             <div class="info-tabs">
@@ -188,14 +163,15 @@
                 <div id="info-about" class="info-panel active">
                     <h2>🚀 О проекте NeonKey</h2>
                     <p>NeonKey — сервис цифровых товаров: пополнение Steam, Telegram Stars и другое.</p>
-                    <p>🔹 Вы выбираете товар в каталоге и переходите к оплате — быстро и без лишних шагов.</p>
+                    <p>🔹 Каталог и оформление покупки — на сайте <a href="/" target="_blank" rel="noopener">neonkey.vercel.app</a>. Здесь, в личном кабинете, — ваш профиль, способы входа и история заказов.</p>
                     <p>🔹 Доставка большинства товаров — автоматическая, сразу после оплаты.</p>
                     <p>🔹 Промокоды и скидки на товары вводятся прямо на странице оплаты.</p>
                     <p>📢 Следите за новостями в нашем <a href="#" class="channel-link">Telegram-канале</a>. Вопросы — в <a href="#" class="support-link">поддержку</a>.</p>
-                    <p class="version">Версия 2.1.0 · © 2026 NeonKey</p>
+                    <p class="version">Версия 2.2.0 · © 2026 NeonKey</p>
                 </div>
                 <div id="info-faq" class="info-panel">
                     <h2>❓ Частые вопросы</h2>
+                    <p><strong>Где покупать товары?</strong><br>Каталог и оплата — на сайте, кнопка «Открыть каталог» на главной странице neonkey.vercel.app. Здесь, в личном кабинете, покупок нет — только профиль и история.</p>
                     <p><strong>Кто принимает оплату?</strong><br>Оплату принимает и обрабатывает сам сервис NeonKey через защищённый платёжный шлюз.</p>
                     <p><strong>Как быстро приходит товар?</strong><br>В большинстве случаев — автоматически, сразу после подтверждения оплаты.</p>
                     <p><strong>Куда делся баланс сайта?</strong><br>Мы отказались от внутреннего баланса и пополнений — теперь каждая покупка оплачивается напрямую, без промежуточного счёта. Это быстрее и прозрачнее.</p>
@@ -212,10 +188,6 @@
             <div class="nav-item active" data-tab="profile">
                 <span class="nav-icon">👤</span>
                 <span class="nav-label">Профиль</span>
-            </div>
-            <div class="nav-item" data-tab="shop">
-                <span class="nav-icon">🛒</span>
-                <span class="nav-label">Каталог</span>
             </div>
             <div class="nav-item" data-tab="info">
                 <span class="nav-icon">ℹ️</span>

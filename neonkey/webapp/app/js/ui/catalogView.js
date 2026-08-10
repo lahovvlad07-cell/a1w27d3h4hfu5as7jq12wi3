@@ -7,7 +7,6 @@
 import { CATALOG } from '../data/catalog.js';
 import { showToast } from './toast.js';
 import { addOrderToHistory } from '../lib/orders.js';
-import { renderProfile } from './profileView.js';
 
 export function renderCatalog() {
     const grid = document.getElementById('shopGrid');
@@ -44,10 +43,10 @@ export function initCatalogButtons(checkoutModal) {
 
         checkoutModal.open(item.checkoutUrl, item.name);
 
-        // Фиксируем заказ в истории профиля (последние 5) — не блокируем
-        // открытие оплаты, если запись вдруг не удалась.
-        addOrderToHistory(item).then(({ error } = {}) => {
-            if (!error) renderProfile();
-        });
+        // Фиксируем заказ в истории профиля (последние 5), если человек
+        // уже вошёл в аккаунт — тихо, не блокируя открытие оплаты.
+        // Историю смотреть в личном кабинете (app/), поэтому здесь её
+        // никак заново не отрисовываем — на этой странице профиля нет.
+        addOrderToHistory(item);
     });
 }

@@ -9,9 +9,8 @@
 //  1. У @BotFather: /setdomain — указать домен, на котором висит сайт.
 //  2. Задеплоить supabase/functions/telegram-auth и telegram-link,
 //     прописать секрет BOT_TOKEN в настройках функций.
-//  3. Указать правильный BOT_USERNAME и TELEGRAM_AUTH_FUNCTION_URL
-//     в webapp/app/js/config.js.
-import { BOT_USERNAME, TELEGRAM_AUTH_FUNCTION_URL } from '../config.js';
+//  3. Указать правильный BOT_USERNAME в webapp/app/js/config.js.
+import { BOT_USERNAME, SUPABASE_ANON_KEY, TELEGRAM_AUTH_FUNCTION_URL, TELEGRAM_LINK_FUNCTION_URL } from '../config.js';
 import { supabaseClient } from './supabaseClient.js';
 
 /** Рисует официальный Telegram Login Widget внутрь контейнера с данным id.
@@ -41,9 +40,17 @@ export function renderTelegramLoginWidget(containerId, { onAuth, buttonSize = 'l
 export async function signInWithTelegram(telegramUser) {
     if (!supabaseClient) return { error: 'Supabase клиент не инициализирован' };
     try {
-        const res = await fetch(`${TELEGRAM_AUTH_FUNCTION_URL}`, {
+        const res = await fetch(TELEGRAM_AUTH_FUNCTION_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                // Функция telegram-auth вызывается ДО того, как у пользователя
+                // появится своя сессия — поэтому шлём анонимный ключ проекта,
+                // а не токен пользователя (его пока просто нет). Без этого
+                // заголовка шлюз Supabase отклоняет запрос ещё до нашего кода.
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
             body: JSON.stringify(telegramUser),
         });
         const payload = await res.json();
@@ -70,10 +77,11 @@ export async function linkTelegramToCurrentUser(telegramUser) {
     if (!accessToken) return { error: 'Нужно быть в системе, чтобы привязать Telegram' };
 
     try {
-        const res = await fetch(`${TELEGRAM_AUTH_FUNCTION_URL.replace('/telegram-auth', '/telegram-link')}`, {
+        const res = await fetch(TELEGRAM_LINK_FUNCTION_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
                 Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify(telegramUser),

@@ -1,4 +1,7 @@
-// ===== ТОЧКА ВХОДА ПРИЛОЖЕНИЯ =====
+// ===== ТОЧКА ВХОДА ЛИЧНОГО КАБИНЕТА (app/) =====
+// Каталога и оплаты здесь больше нет — это только профиль/аккаунт.
+// Каталог с покупкой живёт на сайте (webapp/index.html + landing.js),
+// доступен без входа в аккаунт.
 import { state } from './state.js';
 import { tg } from './lib/telegram.js';
 import { getSession } from './lib/auth.js';
@@ -7,25 +10,17 @@ import { initDocsModal } from './ui/docsModal.js';
 import { initAuthScreen } from './ui/authScreen.js';
 import { showWelcomeModal } from './ui/welcomeModal.js';
 import { initAvatarModal } from './ui/avatarModal.js';
-import { renderCatalog, initCatalogButtons } from './ui/catalogView.js';
-import { initCheckoutModal } from './ui/checkoutModal.js';
 import { renderProfile, initSignOut, initProfileLinking } from './ui/profileView.js';
 import { initTabs } from './ui/tabs.js';
 import { hideLoadingOverlay } from './ui/loadingOverlay.js';
 
 (async function initApp() {
-    console.log('🚀 Запуск приложения...');
+    console.log('🚀 Запуск личного кабинета...');
 
-    // ===== МОДАЛКА ДОКУМЕНТОВ РАБОТАЕТ ДАЖЕ ДО АВТОРИЗАЦИИ =====
-    // (на экране регистрации есть ссылки на Политику/Оферту)
     initDocsModal();
 
-    // ===== БАЗОВЫЕ UI-МОДУЛИ, НЕ ЗАВИСЯЩИЕ ОТ АВТОРИЗАЦИИ =====
     const { switchTab } = initTabs();
     const { openAvatarModal } = initAvatarModal();
-    const checkoutModal = initCheckoutModal();
-    renderCatalog();
-    initCatalogButtons(checkoutModal);
     initProfileLinking();
     initSignOut(() => {
         state.user = null;
@@ -71,5 +66,5 @@ import { hideLoadingOverlay } from './ui/loadingOverlay.js';
     // ===== ФИНАЛ (Telegram Mini App, если открыты внутри Telegram) =====
     tg.ready();
     tg.expand();
-    console.log('✅ NeonKey v2.1.0 загружен');
+    console.log('✅ NeonKey (личный кабинет) загружен');
 })();

@@ -6,6 +6,7 @@
 // Telegram Mini App.
 import { signUp, signInWithPassword, requestPasswordReset } from '../lib/auth.js';
 import { renderTelegramLoginWidget, signInWithTelegram } from '../lib/telegramAuth.js';
+import { isTelegramContext } from '../lib/telegram.js';
 import { showToast } from './toast.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,7 +18,8 @@ export function initAuthScreen({ onAuthenticated }) {
 
     // ===== ВХОД ЧЕРЕЗ TELEGRAM =====
     // Отдельно от email/пароля — не требует ничего вводить, работает и
-    // на сайте, и в мини-аппе. Рисуется один раз при инициализации.
+    // на сайте, и в мини-аппе. Виджет рисуется на обоих шагах (вход и
+    // регистрация) — это один и тот же способ входа под разным местом.
     async function handleTelegramAuth(telegramUser) {
         const { data, error } = await signInWithTelegram(telegramUser);
         if (error) {
@@ -28,6 +30,16 @@ export function initAuthScreen({ onAuthenticated }) {
         onAuthenticated(data.user);
     }
     renderTelegramLoginWidget('telegramLoginWidget', { onAuth: handleTelegramAuth });
+    renderTelegramLoginWidget('telegramRegisterWidget', { onAuth: handleTelegramAuth });
+
+    // ===== ССЫЛКА "НАЗАД НА САЙТ" =====
+    // Имеет смысл только в браузере (внутри Telegram Mini App просто
+    // некуда "возвращаться" отдельной вкладкой) — поэтому показываем
+    // её только вне Telegram.
+    const backLink = document.getElementById('authBackToSite');
+    if (backLink && !isTelegramContext()) {
+        backLink.classList.remove('u-hidden');
+    }
 
     function show() {
         overlay.classList.remove('hidden');

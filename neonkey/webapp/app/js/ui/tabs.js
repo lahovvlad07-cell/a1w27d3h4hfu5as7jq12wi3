@@ -5,7 +5,6 @@ import { CHANNEL_URL, SUPPORT_URL } from '../config.js';
 export function initTabs() {
     const pages = {
         profile: document.getElementById('page-profile'),
-        shop: document.getElementById('page-shop'),
         info: document.getElementById('page-info'),
     };
     const navItems = document.querySelectorAll('.nav-item');
