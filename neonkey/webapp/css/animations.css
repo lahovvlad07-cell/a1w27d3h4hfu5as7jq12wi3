@@ -1,0 +1,58 @@
+/* =========================================================
+   NEONKEY — АНИМАЦИИ
+   Сознательно немного: одна hero-последовательность при загрузке,
+   один scroll-reveal механизм, одна декоративная петля (пульс за
+   сигнатурной SVG в hero). Никаких анимаций, крутящихся вечно на
+   нескольких элементах одновременно — за это отвечает GPU/CPU
+   посетителя, а не только эффектность.
+   ========================================================= */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.85; }
+}
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ---------- Появление при прокрутке ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out);
+}
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+.reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s var(--ease-out), transform 0.55s var(--ease-out);
+}
+.reveal-stagger.is-visible > * { opacity: 1; transform: translateY(0); }
+.reveal-stagger.is-visible > *:nth-child(1) { transition-delay: 0.02s; }
+.reveal-stagger.is-visible > *:nth-child(2) { transition-delay: 0.09s; }
+.reveal-stagger.is-visible > *:nth-child(3) { transition-delay: 0.16s; }
+.reveal-stagger.is-visible > *:nth-child(4) { transition-delay: 0.23s; }
+
+/* ---------- Hero: одна короткая оркестрованная последовательность ---------- */
+.hero-copy > * { opacity: 0; animation: fade-up 0.7s var(--ease-out) forwards; }
+.hero-copy .eyebrow     { animation-delay: 0.04s; }
+.hero-copy h1            { animation-delay: 0.12s; }
+.hero-copy .hero-lede    { animation-delay: 0.22s; }
+.hero-copy .hero-actions { animation-delay: 0.32s; }
+.hero-copy .hero-trust   { animation-delay: 0.42s; }
+
+.hero-visual { opacity: 0; animation: scale-in 0.7s var(--ease-out) forwards; animation-delay: 0.24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy > *, .hero-visual { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .reveal, .reveal-stagger > * { opacity: 1 !important; transform: none !important; }
+}
