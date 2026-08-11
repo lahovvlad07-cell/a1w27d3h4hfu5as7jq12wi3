@@ -1,0 +1,74 @@
+/* =========================================================
+   NEONKEY — ДИЗАЙН-ТОКЕНЫ
+   Палитра снята с реального лого бренда: голубой → сиреневый →
+   розовый неон на почти чёрном фоне. Меняешь бренд — меняешь
+   только этот файл.
+   ========================================================= */
+:root {
+  /* ---------- Цвет (фон почти совпадает с фоном лого) ---------- */
+  --bg-deep:      #05070e;
+  --bg-panel:     #0d1220;
+  --bg-panel-alt: #12182b;
+
+  --accent-cyan:     #34d9ff;
+  --accent-cyan-deep:#17a8d6;
+  --accent-magenta:  #ff49d2;
+  --accent-magenta-deep: #d92bab;
+  --accent-violet:   #a855f7;
+
+  --text-primary:   #f2f5fb;
+  --text-secondary: #b3bdd4;
+  --text-muted:     #7c86a2;
+  --text-faint:     #4c5570;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-cyan:   rgba(52, 217, 255, 0.35);
+  --border-magenta:rgba(255, 73, 210, 0.35);
+
+  --state-success: var(--accent-cyan);
+  --state-error:   #ff6b7a;
+  --state-info:    var(--accent-violet);
+
+  --shadow-ambient: 0 24px 60px -24px rgba(0, 0, 0, 0.6);
+
+  /* ---------- Градиенты (единственный переиспользуемый "брендовый" градиент) ---------- */
+  --grad-brand: linear-gradient(115deg, var(--accent-cyan) 0%, var(--accent-violet) 55%, var(--accent-magenta) 100%);
+  --grad-cyan:  linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  --grad-magenta: linear-gradient(135deg, var(--accent-magenta) 0%, var(--accent-magenta-deep) 100%);
+
+  /* ---------- Типографика ---------- */
+  --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-body:    'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --fs-hero:   clamp(2.3rem, 4vw + 1rem, 3.5rem);
+  --fs-h2:     clamp(1.6rem, 1.2vw + 1.2rem, 2.1rem);
+  --fs-h3:     1.1rem;
+  --fs-body:   1rem;
+  --fs-small:  0.875rem;
+  --fs-micro:  0.75rem;
+
+  --lh-tight: 1.12;
+  --lh-normal: 1.6;
+
+  /* ---------- Отступы (шкала 4px) ---------- */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 88px;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --container-w: 1120px;
+
+  /* ---------- Движение (нарочно немного: см. animations.css) ---------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.16s;
+  --dur-med: 0.32s;
+}
+
+@media (max-width: 720px) {
+  :root { --sp-8: 44px; --sp-9: 60px; }
+}
