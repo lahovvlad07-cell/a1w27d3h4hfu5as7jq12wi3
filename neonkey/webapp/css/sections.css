@@ -41,21 +41,26 @@
   pointer-events: none;
 }
 .pulse-svg { position: relative; width: 100%; height: auto; margin-bottom: var(--sp-5); }
+/* Раньше здесь же была CSS-анимация draw-line (animation + animation-delay),
+   стартующая сама по себе, без участия JS. Она гонялась с JS-анимацией
+   (см. lib/pulseLine.js) за то, чья версия итогового вида победит: пока
+   скрипт не выполнился, браузер иногда успевал сам начать рисовать
+   СТАРУЮ статичную форму по CSS-таймеру, а потом JS обрывал её и подменял
+   на новую случайную — визуально это выглядело как "начинается с конца,
+   потом обрывается, недорисованное". Теперь никакой авто-анимации в CSS
+   нет вообще: линия по умолчанию просто скрыта (большой dasharray), и
+   единственный, кто её анимирует — JS через Web Animations API. Никакой
+   гонки таймингов больше не может возникнуть в принципе. */
 .pulse-line {
   fill: none;
   stroke: url(#pulseGradient);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 620;
-  stroke-dashoffset: 620;
-  animation: draw-line 1.6s var(--ease-out) forwards;
-  animation-delay: 0.5s;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
 }
-/* После входной отрисовки линия становится "живой" (двигается непрерывно через JS) —
-   снимаем dasharray/анимацию, иначе на новой форме пути будет рваться обводка. */
 .pulse-line.is-live {
-  animation: none;
   stroke-dasharray: none;
   stroke-dashoffset: 0;
 }

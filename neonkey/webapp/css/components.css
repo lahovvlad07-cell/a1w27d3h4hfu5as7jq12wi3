@@ -295,3 +295,71 @@
 .badge-soon { color: var(--accent-violet); border-color: rgba(168, 85, 247, 0.35); }
 .badge-live { color: var(--accent-cyan); border-color: var(--border-cyan); }
 .badge-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 6px var(--accent-cyan); }
+
+/* ---------- Плавающий кружок "наш Telegram-канал" ----------
+   Живёт поверх всей страницы (fixed), одна и та же разметка на index.html
+   и account.html — так посетитель видит его и на лендинге, и уже войдя в
+   кабинет. Клик обрабатывает существующий .js-channel-link (см. main.js /
+   account.js) — отдельного JS для самого кружка не нужно. */
+.tg-float {
+  position: fixed;
+  right: var(--sp-5);
+  bottom: var(--sp-5);
+  z-index: 80;
+}
+.tg-float-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--grad-brand);
+  box-shadow: var(--shadow-ambient);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.tg-float-badge::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--grad-brand);
+  filter: blur(10px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: pulse-glow 3.2s ease-in-out infinite;
+}
+.tg-float-badge:hover, .tg-float-badge:focus-visible { transform: translateY(-3px) scale(1.06); }
+.tg-float-badge svg { width: 24px; height: 24px; fill: var(--bg-deep); }
+.tg-float-tip {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-panel-alt);
+  color: var(--text-primary);
+  font-size: var(--fs-micro);
+  font-family: var(--font-body);
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-ambient);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+.tg-float-badge:hover .tg-float-tip,
+.tg-float-badge:focus-visible .tg-float-tip { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+@media (max-width: 640px) {
+  .tg-float { right: var(--sp-4); bottom: var(--sp-4); }
+  .tg-float-badge { width: 48px; height: 48px; }
+  .tg-float-badge svg { width: 20px; height: 20px; }
+  .tg-float-tip { display: none; } /* hover бесполезен на тач — не занимаем экран */
+}
+@media (prefers-reduced-motion: reduce) {
+  .tg-float-badge::before { animation: none !important; }
+}

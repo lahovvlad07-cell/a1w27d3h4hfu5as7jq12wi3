@@ -58,7 +58,20 @@ export async function verifyTelegramAuth(
 /** Детерминированный "служебный" email для аккаунта, у которого пока нет
  *  настоящей почты — так им можно управлять через обычный Supabase Auth,
  *  не заводя отдельную таблицу telegram_users. Пользователь этот email
- *  нигде не видит, пока сам не привяжет настоящий (см. profileView.js). */
+ *  нигде не видит, пока сам не привяжет настоящий (см. profilePage.js).
+ *
+ *  ВАЖНО про домен: раньше здесь стоял `telegram.neonkey.local` — зона
+ *  .local зарезервирована под mDNS (RFC 6762) и Supabase Auth считает её
+ *  недоставляемой, поэтому ЛЮБОЕ обновление email у такого аккаунта
+ *  (например, попытка привязать настоящую почту через "Привязать email"
+ *  в профиле) падало с ошибкой "Email address ...telegram.neonkey.local
+ *  is invalid" — Supabase проверяет текущий email при смене, а не только
+ *  новый. .test/.example/.invalid — тоже зарезервированные зоны и дадут
+ *  ту же ошибку. Письма на этот адрес никогда не отправляются (вход только
+ *  через Telegram), поэтому реальный DNS не обязателен — но зона должна
+ *  выглядеть как обычная. Если у тебя есть свой домен — подставь его
+ *  (например `telegram.твой-домен.ru`), это надёжнее, чем этот дефолт.
+ */
 export function telegramPlaceholderEmail(telegramId: number): string {
-    return `tg-${telegramId}@telegram.neonkey.local`;
+    return `tg-${telegramId}@telegram.neonkey.app`; // TODO: замени на telegram.<твой домен>, если он есть
 }

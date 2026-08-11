@@ -62,8 +62,12 @@ async function verifyTelegramAuth(
     return { ok: true };
 }
 
+// ВАЖНО про домен: зона .local зарезервирована под mDNS и Supabase Auth
+// считает её недоставляемой — это ломает "Привязать email" в профиле у
+// аккаунтов, созданных через Telegram (см. подробный комментарий в
+// _shared/telegram.ts). Если есть свой домен — подставь его сюда.
 function telegramPlaceholderEmail(telegramId: number): string {
-    return `tg-${telegramId}@telegram.neonkey.local`;
+    return `tg-${telegramId}@telegram.neonkey.app`; // TODO: замени на telegram.<твой домен>, если он есть
 }
 // ---------- конец встроенного _shared/telegram.ts ----------
 
