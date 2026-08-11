@@ -2,20 +2,8 @@
 import { state } from '../state.js';
 import { getOrderHistory } from '../lib/orders.js';
 import { signOut, updateUserMetadata, linkEmailPassword } from '../lib/auth.js';
+import { realEmail } from '../lib/telegramAuth.js';
 import { showToast } from './toast.js';
-
-// Служебный email аккаунтов, созданных через вход по Telegram (см.
-// telegramPlaceholderEmail() в supabase/functions/_shared/telegram.ts) —
-// пользователь его никогда не задавал сам, поэтому показывать такой адрес
-// как "привязанный email" неправильно: именно это раньше выглядело как
-// "какой-то левый email взялся из ниоткуда".
-const PLACEHOLDER_EMAIL_SUFFIX = '@telegram.neonkey.local';
-
-function realEmail(user) {
-    const email = user?.email;
-    if (!email || email.endsWith(PLACEHOLDER_EMAIL_SUFFIX)) return null;
-    return email;
-}
 
 function displayName(user) {
     return user?.user_metadata?.display_name

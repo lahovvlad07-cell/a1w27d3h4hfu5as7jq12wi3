@@ -9,8 +9,29 @@
 //  2. Задеплоить supabase/functions/telegram-auth, прописать секрет
 //     BOT_TOKEN в настройках функции.
 //  3. Проверить BOT_USERNAME в js/config.js.
-import { BOT_USERNAME, SUPABASE_ANON_KEY, TELEGRAM_AUTH_FUNCTION_URL, TELEGRAM_LINK_FUNCTION_URL } from '../config.js';
+import { BOT_USERNAME, SUPABASE_ANON_KEY, TELEGRAM_AUTH_FUNCTION_URL, TELEGRAM_LINK_FUNCTION_URL, TELEGRAM_PLACEHOLDER_EMAIL_DOMAIN } from '../config.js';
 import { supabaseClient } from './supabaseClient.js';
+
+/** true, если это служебный email, который сам сгенерировался при входе
+ *  через Telegram (см. telegramPlaceholderEmail() в
+ *  supabase/functions/_shared/telegram.ts) — пользователь его не задавал,
+ *  поэтому нигде в интерфейсе показывать его как "привязанный email"
+ *  нельзя. Единственное место в webapp, где знаем формат этого домена —
+ *  дальше везде, где нужно проверить/скрыть такой email, импортируй эту
+ *  функцию, а не сравнивай со строкой заново (см. историю бага в
+ *  supabase/fix_telegram_placeholder_emails.sql — там уже разъезжались
+ *  два хардкода одного и того же домена). */
+export function isPlaceholderEmail(email) {
+    return Boolean(email) && email.endsWith(`@${TELEGRAM_PLACEHOLDER_EMAIL_DOMAIN}`);
+}
+
+/** Возвращает email пользователя, только если это настоящий, самим
+ *  пользователем привязанный адрес (не служебный tg-*@...). */
+export function realEmail(user) {
+    const email = user?.email;
+    if (!email || isPlaceholderEmail(email)) return null;
+    return email;
+}
 
 /** Рисует официальный Telegram Login Widget внутрь контейнера с данным id.
  *  onAuth(telegramUser) вызовется, когда пользователь подтвердит вход. */

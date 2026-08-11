@@ -31,5 +31,15 @@ export const BOT_USERNAME = 'NeonKey_Bot';
 export const TELEGRAM_AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 export const TELEGRAM_LINK_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-link`;
 
+// Домен служебного email для аккаунтов, вошедших через Telegram (см.
+// telegramPlaceholderEmail() в supabase/functions/_shared/telegram.ts —
+// ОБЯЗАТЕЛЬНО держи это значение синхронным с тем файлом, иначе
+// служебный email снова "протечёт" в UI как настоящий, привязанный
+// пользователем адрес). Пользователь такой email никогда не задавал
+// сам и нигде в интерфейсе видеть не должен — см. isPlaceholderEmail()
+// в webapp/js/lib/telegramAuth.js, которым фильтруются все места, где
+// показывается user.email.
+export const TELEGRAM_PLACEHOLDER_EMAIL_DOMAIN = 'telegram.neonkey.app';
+
 // Аватары личного кабинета — просто эмодзи, без загрузки файлов.
 export const AVATAR_EMOJIS = ['🚀', '💎', '⚡', '🔥', '🌟', '🎮', '🕹️', '💰', '🛰️', '🌐', '🔮', '🧩', '🎯', '🏆', '🥇', '🪙'];

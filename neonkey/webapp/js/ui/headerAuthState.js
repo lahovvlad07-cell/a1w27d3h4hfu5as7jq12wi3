@@ -3,10 +3,12 @@
 // два состояния: «Войти» (открывает authModal) или короткая ссылка
 // с аватаром на личный кабинет (account.html), где уже живут профиль,
 // каталог и вся остальная информация.
+import { realEmail } from '../lib/telegramAuth.js';
+
 function displayName(user) {
     return user?.user_metadata?.telegram_first_name
         || user?.user_metadata?.first_name
-        || user?.email?.split('@')[0]
+        || realEmail(user)?.split('@')[0]
         || 'Кабинет';
 }
 
