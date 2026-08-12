@@ -69,6 +69,7 @@ supabase/
     _shared/telegram.ts            проверка подписи Telegram Login Widget
     telegram-auth/                  вход/регистрация через Telegram
     telegram-link/                  привязка Telegram к текущему аккаунту
+    link-email/                     привязка/переподвязка email к Telegram-аккаунту
 bot/
   main.py, config.py, keyboards.py, handlers/start.py
   (Telegram-бот — точка входа в будущий Mini App; сайта не касается)
@@ -128,11 +129,12 @@ bot/
 
 ### 2. Вход через Telegram и привязка аккаунта — требуют одноразовой настройки на сервере
 Email/пароль работает «из коробки» (это штатная функция Supabase Auth).
-А вот вход через Telegram (и привязка Telegram к уже созданному
-email-аккаунту через кнопку «Привязать» в профиле) проверяется не в
-браузере (токен бота нельзя доверять клиентскому коду), а в двух
-Supabase Edge Functions — **пока они не задеплоены, кнопка Telegram в
-модалке входа и кнопка «Привязать» в профиле будут закономерно выдавать
+А вот вход через Telegram, привязка Telegram к уже созданному
+email-аккаунту («Привязать» у Telegram в профиле) и привязка email к
+аккаунту, созданному через Telegram («Привязать» у email в профиле),
+проверяются не в браузере (токен бота и service-role ключ нельзя
+доверять клиентскому коду), а в трёх Supabase Edge Functions — **пока
+они не задеплоены, соответствующие кнопки будут закономерно выдавать
 ошибку связи с сервером**. Это не баг фронтенда, а недостающий шаг
 инфраструктуры:
 
@@ -143,21 +145,35 @@ Supabase Edge Functions — **пока они не задеплоены, кно�
    ```bash
    supabase functions deploy telegram-auth
    supabase functions deploy telegram-link
+   supabase functions deploy link-email
    ```
    Без CLI (прямо на сайте supabase.com → Edge Functions → Create a new
    function) для каждой функции нужен ОДИН файл без импортов — веб-редактор
    не поддерживает импорт соседних файлов вроде `_shared/telegram.ts`.
    Для этого рядом лежат готовые самодостаточные версии — вставляй их:
-   `telegram-auth/index.dashboard.ts` и `telegram-link/index.dashboard.ts`
-   (весь код проверки подписи уже встроен внутрь, копировать больше
-   ничего не нужно).
+   `telegram-auth/index.dashboard.ts`, `telegram-link/index.dashboard.ts`
+   и `link-email/index.dashboard.ts` (весь нужный код уже встроен внутрь,
+   копировать больше ничего не нужно).
 3. **Секреты функций.** В Supabase Dashboard → Edge Functions → Secrets
-   пропиши (одинаково для обеих функций):
-   - `BOT_TOKEN` — тот же токен, что в `bot/config.py`/`.env`.
+   пропиши:
+   - `BOT_TOKEN` — тот же токен, что в `bot/config.py`/`.env` (нужен
+     `telegram-auth` и `telegram-link`).
    - `SUPABASE_SERVICE_ROLE_KEY` — Settings → API → service_role key
-     (⚠️ секретный ключ, никогда не должен попасть в `webapp/`).
+     (⚠️ секретный ключ, никогда не должен попасть в `webapp/`; нужен
+     всем трём функциям).
 4. **Конфиг фронтенда.** В `webapp/js/config.js` проверь `BOT_USERNAME` —
    юзернейм бота без `@`.
+
+**Почему у email отдельная функция, а не обычный `auth.updateUser()`:**
+у Supabase по умолчанию включена «Secure email change» — смена email
+требует перехода по ссылке из письма, отправленного не только на новый
+адрес, но и на старый. У Telegram-аккаунтов «старый» адрес — служебный
+`tg-<id>@telegram.neonkey.app` (см. `_shared/telegram.ts`), который
+никогда не был настоящим почтовым ящиком, поэтому подтвердить его
+Supabase не может — вся операция падает с ошибкой вида `Email address
+"tg-...@telegram.neonkey.app" is invalid`. `link-email` меняет email
+напрямую через admin API (в обход подтверждения по старому адресу) и
+сразу помечает новый адрес подтверждённым.
 
 Пока не задеплоено — просто говори покупателям входить по email, это
 не блокирует запуск сайта.

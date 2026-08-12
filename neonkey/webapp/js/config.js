@@ -27,9 +27,10 @@ export const SHOP_NAME = 'NeonKey';
 export const BOT_USERNAME = 'NeonKey_Bot';
 
 // Supabase Edge Functions, проверяющие вход через Telegram
-// (см. /supabase/functions/telegram-auth, telegram-link).
+// (см. /supabase/functions/telegram-auth, telegram-link, link-email).
 export const TELEGRAM_AUTH_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-auth`;
 export const TELEGRAM_LINK_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/telegram-link`;
+export const LINK_EMAIL_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/link-email`;
 
 // Домен служебного email для аккаунтов, вошедших через Telegram (см.
 // telegramPlaceholderEmail() в supabase/functions/_shared/telegram.ts —

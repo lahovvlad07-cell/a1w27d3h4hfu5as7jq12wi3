@@ -137,10 +137,7 @@ export function initProfilePage({ avatarPicker, telegramLinkModal, onSignedOut }
         if (user) state.user = user;
         closeEmailLink();
         render();
-        // Если в проекте включено подтверждение email, адрес обновится только
-        // после перехода по ссылке из письма — предупреждаем об этом сразу,
-        // чтобы это не выглядело как ещё одна "пропажа" данных.
-        showToast('Проверьте почту — если нужно подтверждение, email обновится после перехода по ссылке из письма', 'success', 6000);
+        showToast('Email привязан — теперь можно входить и по нему', 'success');
     }
 
     linkEmailBtn?.addEventListener('click', openEmailLink);
