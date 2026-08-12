@@ -43,13 +43,23 @@ Deno.serve(async (req) => {
     if (!ok) return json({ error: `Подпись Telegram не прошла проверку (${reason})` }, 401);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    const email = telegramPlaceholderEmail(telegramUser.id);
+    const placeholderEmail = telegramPlaceholderEmail(telegramUser.id);
 
-    // Ищем существующего пользователя по служебному email. Для реальных
-    // масштабов лучше завести отдельную таблицу telegram_id -> user_id,
-    // но для старта хватает и этого (аккаунтов немного, listUsers быстрый).
+    // Ищем существующего пользователя по telegram_id в user_metadata —
+    // НЕ по служебному email. Раньше искали по email === placeholderEmail,
+    // но после того как пользователь привязывает свой настоящий email
+    // (кнопка "Привязать email" в профиле, см. supabase/functions/link-email)
+    // служебный email у аккаунта заменяется на настоящий и перестаёт
+    // существовать — поиск по нему больше не находил аккаунт, и вход
+    // через Telegram создавал ВТОРОЙ, новый аккаунт вместо старого. Поиск
+    // по telegram_id этой проблемы не имеет: он не зависит от того, какой
+    // email сейчас привязан к аккаунту (см. тот же подход в telegram-link).
+    //
+    // Для реальных масштабов лучше завести отдельную таблицу
+    // telegram_id -> user_id, но для старта хватает и listUsers
+    // (аккаунтов немного, запрос быстрый).
     const { data: existing } = await admin.auth.admin.listUsers({ perPage: 1000 });
-    let user = existing?.users?.find((u) => u.email === email);
+    let user = existing?.users?.find((u) => u.user_metadata?.telegram_id === telegramUser.id);
 
     const profileFields = {
         telegram_id: telegramUser.id,
@@ -60,17 +70,27 @@ Deno.serve(async (req) => {
 
     if (!user) {
         const { data: created, error: createError } = await admin.auth.admin.createUser({
-            email,
+            email: placeholderEmail,
             email_confirm: true,
             user_metadata: profileFields,
         });
         if (createError) return json({ error: createError.message }, 500);
         user = created.user;
     } else {
-        await admin.auth.admin.updateUserById(user.id, {
+        const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(user.id, {
             user_metadata: { ...user.user_metadata, ...profileFields },
         });
+        if (updateError) return json({ error: updateError.message }, 500);
+        user = updated.user;
     }
+
+    // Письмо/токен всегда генерируем на ТЕКУЩИЙ email аккаунта (user.email) —
+    // это либо служебный placeholderEmail (для нового аккаунта), либо
+    // настоящий email, который пользователь уже привязал, а не заново
+    // вычисленный placeholderEmail: если бы использовали его для уже
+    // существующего аккаунта с настоящим email, generateLink создал бы
+    // токен для несуществующего у этого пользователя адреса.
+    const email = user.email!;
 
     // Генерируем magic-link и достаём из него одноразовый токен — сам
     // ссылкой не пользуемся (она ведёт на дефолтный redirect Supabase),
