@@ -185,6 +185,7 @@
   transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 .buy-amount-row:focus-within { border-color: var(--accent-cyan); background: rgba(52, 217, 255, 0.04); }
+.buy-amount-row.is-invalid { border-color: var(--state-error); background: rgba(255, 107, 122, 0.06); }
 .buy-amount-input {
   flex: 1; min-width: 0;
   background: none; border: none; outline: none;
@@ -194,7 +195,8 @@
 .buy-amount-input::-webkit-outer-spin-button, .buy-amount-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .buy-amount-input[type="number"] { -moz-appearance: textfield; }
 .buy-amount-suffix { font-family: var(--font-mono); font-weight: 600; font-size: 0.92rem; color: var(--text-faint); }
-.buy-qty-hint { margin: 0; font-size: var(--fs-micro); color: var(--text-faint); }
+.buy-qty-hint { margin: 0; font-size: var(--fs-micro); color: var(--text-faint); transition: color var(--dur-fast) var(--ease-out); }
+.buy-qty-hint.is-invalid { color: var(--state-error); font-weight: 600; }
 
 .buy-quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .quick-chip {

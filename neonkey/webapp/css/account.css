@@ -177,6 +177,7 @@
 .info-panel p strong { color: var(--text-primary); }
 .info-panel a { color: var(--accent-cyan); }
 .info-version { color: var(--text-faint); font-size: 12px; margin-top: var(--sp-5); }
+.doc-meta { color: var(--text-faint); font-size: 12px; margin-bottom: var(--sp-4); }
 
 @media (max-width: 620px) {
   .account-tabs { display: flex; }

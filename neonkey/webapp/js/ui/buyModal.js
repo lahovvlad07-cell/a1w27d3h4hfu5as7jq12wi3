@@ -17,8 +17,8 @@
 //     цены уже готовы, менять надо только сам платёж.
 //
 // ПОРТИРОВАНИЕ В MINI APP: вся логика цены и валидации вынесена в чистые
-// функции без DOM (formatMoney/computeTotal/clampQty/qtyHint выше) — их
-// можно скопировать как есть в мини-апп и обвязать своей вёрсткой.
+// функции без DOM (formatMoney/computeTotal/clampQty/qtyHint/validateQty
+// выше) — их можно скопировать как есть в мини-апп и обвязать своей вёрсткой.
 import { PRODUCT_ICONS } from './catalogIcons.js';
 import { addOrderToHistory } from '../lib/orders.js';
 import { showToast } from './toast.js';
@@ -47,6 +47,35 @@ function qtyHint(item) {
         ? `От ${min} до ${max} звёзд`
         : `От ${formatMoney(min)} до ${formatMoney(max)} ${item.currency}`;
 }
+// Отдельно от clampQty: clampQty используется только для чипов/финального
+// клика по «Оплатить», а свободный ввод в поле мы больше не подгоняем
+// молча под границы — вместо этого показываем предупреждение и блокируем
+// кнопку, чтобы не создавалось ощущение, что "как ни напиши — само
+// исправится". См. validateQty() ниже.
+function validateQty(item, raw) {
+    const min = minQty(item);
+    const max = maxQty(item);
+    if (raw === '' || raw === null || raw === undefined) {
+        return { ok: false, message: 'Введите сумму' };
+    }
+    const value = Number(raw);
+    if (!Number.isFinite(value)) {
+        return { ok: false, message: 'Введите число' };
+    }
+    if (value < min) {
+        return {
+            ok: false,
+            message: item.type === 'unit' ? `Минимум — ${min} ⭐` : `Минимум — ${formatMoney(min)} ${item.currency}`,
+        };
+    }
+    if (value > max) {
+        return {
+            ok: false,
+            message: item.type === 'unit' ? `Максимум — ${max} ⭐` : `Максимум — ${formatMoney(max)} ${item.currency}`,
+        };
+    }
+    return { ok: true, value };
+}
 
 export function initBuyModal({ checkoutModal } = {}) {
     const overlay = document.getElementById('buyModalOverlay');
@@ -57,6 +86,7 @@ export function initBuyModal({ checkoutModal } = {}) {
     const descEl = document.getElementById('buyModalDesc');
     const qtyLabelEl = document.getElementById('buyQtyLabel');
     const qtyValueEl = document.getElementById('buyQtyValue');
+    const qtyRowEl = qtyValueEl?.closest('.buy-amount-row');
     const qtySuffixEl = document.getElementById('buyQtySuffix');
     const qtyHintEl = document.getElementById('buyQtyHint');
     const quickRowEl = document.getElementById('buyQuickRow');
@@ -67,11 +97,25 @@ export function initBuyModal({ checkoutModal } = {}) {
     let currentItem = null;
     let qty = 0;
     let method = 'card';
+    let validation = { ok: true };
+    const defaultHint = () => qtyHint(currentItem);
 
     function setActiveQuickChip() {
         quickRowEl.querySelectorAll('.quick-chip').forEach((chip) => {
             chip.classList.toggle('is-active', Number(chip.dataset.value) === qty);
         });
+    }
+
+    // Показывает предупреждение под полем и блокирует «Купить»/«Оплатить»,
+    // если введённая сумма/количество вне допустимого диапазона товара —
+    // вместо того чтобы молча подгонять её под границы (так пользователь
+    // не потеряет то, что он на самом деле хотел ввести, и явно увидит,
+    // что именно нужно исправить).
+    function applyValidation() {
+        qtyRowEl?.classList.toggle('is-invalid', !validation.ok);
+        qtyHintEl.classList.toggle('is-invalid', !validation.ok);
+        qtyHintEl.textContent = validation.ok ? defaultHint() : validation.message;
+        confirmBtn.disabled = !validation.ok;
     }
 
     // syncInput=false — при вводе с клавиатуры не трогаем поле, чтобы не
@@ -100,19 +144,21 @@ export function initBuyModal({ checkoutModal } = {}) {
         confirmBtn.textContent = currentItem.checkoutUrl
             ? `Перейти к оплате · ${formatMoney(total)} ${currentItem.currency}`
             : `Оплатить ${formatMoney(total)} ${currentItem.currency}`;
+
+        applyValidation();
     }
 
     function open(item) {
         currentItem = item;
         qty = item.type === 'unit' ? item.defaultQty : item.defaultAmount;
         method = 'card';
+        validation = { ok: true };
 
         titleEl.textContent = item.name;
         iconEl.innerHTML = PRODUCT_ICONS[item.icon] || '';
         descEl.textContent = item.description;
         qtyLabelEl.textContent = item.type === 'unit' ? 'Количество' : 'Сумма пополнения';
         qtySuffixEl.textContent = item.type === 'unit' ? '⭐' : item.currency;
-        qtyHintEl.textContent = qtyHint(item);
         qtyValueEl.min = minQty(item);
         qtyValueEl.max = maxQty(item);
 
@@ -141,28 +187,27 @@ export function initBuyModal({ checkoutModal } = {}) {
     quickRowEl.addEventListener('click', (e) => {
         const chip = e.target.closest('.quick-chip');
         if (!chip || !currentItem) return;
+        // Чипы всегда в пределах min/max товара (это ответственность
+        // data/catalog.js), поэтому clampQty здесь безопасен и не прячет
+        // ничего — это просто клик по готовому валидному значению.
         qty = clampQty(currentItem, Number(chip.dataset.value));
+        validation = { ok: true };
         renderBreakdown();
     });
 
-    // Свободный ввод числа с клавиатуры — считаем разбивку сразу по мере
-    // печати, а к границам min/max подгоняем только при уходе с поля
-    // (иначе нельзя было бы стереть цифру и напечатать другую).
+    // Свободный ввод числа с клавиатуры — считаем разбивку и проверяем
+    // границы сразу по мере печати. Если сумма вне диапазона (в том числе
+    // больше maxQty/maxAmount), поле подсвечивается, под ним появляется
+    // предупреждение, а кнопка покупки блокируется — до тех пор, пока
+    // пользователь не введёт значение в допустимых пределах.
     qtyValueEl.addEventListener('input', () => {
         if (!currentItem) return;
-        const raw = Number(qtyValueEl.value);
-        if (qtyValueEl.value !== '' && Number.isFinite(raw)) {
-            qty = raw;
-            renderBreakdown(false);
-        }
-    });
-    qtyValueEl.addEventListener('blur', () => {
-        if (!currentItem) return;
-        qty = clampQty(currentItem, Number(qtyValueEl.value));
-        renderBreakdown();
+        validation = validateQty(currentItem, qtyValueEl.value);
+        qty = validation.ok ? validation.value : Number(qtyValueEl.value) || 0;
+        renderBreakdown(false);
     });
     qtyValueEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') qtyValueEl.blur();
+        if (e.key === 'Enter' && validation.ok) qtyValueEl.blur();
     });
 
     methodsEl.addEventListener('click', (e) => {
@@ -174,9 +219,14 @@ export function initBuyModal({ checkoutModal } = {}) {
 
     confirmBtn.addEventListener('click', () => {
         if (!currentItem) return;
-        // На случай, если "Оплатить" нажали сразу после печати, не дожидаясь blur.
-        qty = clampQty(currentItem, Number(qtyValueEl.value));
-        renderBreakdown();
+        // Подстраховка: пересчитываем валидность прямо перед покупкой на
+        // случай программных изменений поля — кнопка и так задизейблена
+        // при невалидном значении, но это на случай, если disabled
+        // почему-то не помешал клику (например, Enter в некоторых браузерах).
+        validation = validateQty(currentItem, qtyValueEl.value);
+        applyValidation();
+        if (!validation.ok) return;
+        qty = validation.value;
 
         const total = computeTotal(currentItem, qty);
         const priceLabel = `${formatMoney(total)} ${currentItem.currency}`;
